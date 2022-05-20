@@ -11,6 +11,7 @@ TODO:
         add sensical % operator (with all positive modulo)
         implement square root
         implicit conversions and warnings for them
+        Get ideas form other like this one: https://faheel.github.io/BigInt/
  	faster algorithms:
  		decimal to hex and inverse casting
  		division
@@ -18,6 +19,5 @@ TODO:
 	to test:
  		all
 	where to publish:
- 		github
  		reddit
 		hackernews
