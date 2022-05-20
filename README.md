@@ -4,7 +4,7 @@ All you need to do is replace hugeint with int in the declaration and the rest i
 
 It has all operators that are usable with a normal integer type, and I mean ALL of them.
 
-    -asignment functions: =, constuctors and casting operators for any integer type
+    -asignment functions: = operator, constuctors and casting operators for any integer type
     -comparison operators: ==, !=, <, >, <=, >=;
     -bit operators: ~, &=, &, |=, |, ^=, ^, <<=, <<, >>=, >>;
     -adition and subtraction operators: ++ and --(both pre and post increment), +=, +, -=, -;
