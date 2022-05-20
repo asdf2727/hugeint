@@ -14,3 +14,5 @@ It has all operators that are usable with a normal integer type, and I mean ALL 
 All these operators function identicaly to the int type, but without overflow at any size.
 
 I am consistently working on this project, and I have a TODO file in which you can look to better see what are my curent improvment goals.
+
+If you have any suggestion, feel free to create an issue for it.
