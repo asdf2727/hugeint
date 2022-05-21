@@ -257,21 +257,13 @@ hugeint &hugeint::decrement () {
 	return *this;
 }
 
-hugeint &hugeint::calculateAdd (const hugeint &to_and) {
+hugeint &hugeint::calculateAdd (const hugeint &to_add) {
 	ullint sav = 0;
-	resize(std::max(bits.size(), to_and.bits.size()) + 1);
-	for (std::size_t index = 0; index < to_and.bits.size(); index++) {
-		sav += (ullint)bits[index] + to_and.bits[index];
+	resize(std::max(bits.size(), to_add.bits.size()) + 1);
+	for (std::size_t index = 0; index < bits.size(); index++) {
+		sav += (ullint)bits[index] + (index < to_add.bits.size() ? to_add.bits[index] : (to_add.neg ? 0xffffffff : 0));
 		bits[index] = (uint)sav;
 		sav >>= 32;
-	}
-	for (std::size_t index = to_and.bits.size(); index < bits.size() && sav != 0; index++) {
-		sav += bits[index];
-		bits[index] = (uint)sav;
-		sav >>= 32;
-		if (sav == 0) {
-			break;
-		}
 	}
 	neg = bits.back() & 0x80000000;
 	clearZeros();
@@ -280,15 +272,10 @@ hugeint &hugeint::calculateAdd (const hugeint &to_and) {
 hugeint &hugeint::calculateDec (const hugeint &to_dec) {
 	ullint sav = 0;
 	resize(std::max(bits.size(), to_dec.bits.size()) + 1);
-	for (std::size_t index = 0; index < to_dec.bits.size(); index++) {
-		sav += (ullint)bits[index] - to_dec.bits[index];
+	for (std::size_t index = 0; index < bits.size(); index++) {
+		sav += (ullint)bits[index] - (index < to_dec.bits.size() ? to_dec.bits[index] : (to_dec.neg ? 0xffffffff : 0));
 		bits[index] = (uint)sav;
-		sav = (sav >> 32) + sav & 0xffffffff00000000; // keep the negative for carry
-	}
-	for (std::size_t index = to_dec.bits.size(); index < bits.size() && sav != 0; index++) {
-		sav += bits[index];
-		bits[index] = (uint)sav;
-		sav = (sav >> 32) + sav & 0xffffffff00000000; // keep the negative for carry
+		sav = (sav & 0xffffffff00000000) + (sav >> 32); // keep the negative for carry
 	}
 	neg = bits.back() & 0x80000000;
 	clearZeros();

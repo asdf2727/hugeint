@@ -1,4 +1,7 @@
 TODO:
+    Get ideas form other like this one: https://faheel.github.io/BigInt/
+    examples:
+        add more operators to the arithmetic calculator
     clean the code:
         default = operator for hugeint ot hugeint
         instead of always copying a variable, make a pointer that can modify when needed (node: tostring, *=, /=, %=)
@@ -10,8 +13,8 @@ TODO:
         return the size in bytes
         add sensical % operator (with all positive modulo)
         implement square root
+        implement power
         implicit conversions and warnings for them
-        Get ideas form other like this one: https://faheel.github.io/BigInt/
  	faster algorithms:
  		decimal to hex and inverse casting
  		division

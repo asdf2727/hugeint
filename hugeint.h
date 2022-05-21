@@ -348,6 +348,12 @@ public:
 		return lhs -= (NotHugeint)rhs;
 	}
 
+	friend hugeint operator- (const hugeint &lhs){
+		hugeint result = lhs;
+		result.negate();
+		return result;
+	}
+
 	friend hugeint operator- (const hugeint &lhs, const hugeint &rhs) {
 		hugeint result = lhs;
 		result.calculateDec(rhs);

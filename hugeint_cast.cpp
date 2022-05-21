@@ -29,7 +29,7 @@ std::string hugeint::toString () const {
 	char carry;
 	bool done;
 	ans.push_back(0);
-	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
+	for (std::size_t index = copy.bits.size() - 1; index < copy.bits.size(); index--) {
 		for (uint pos = 0x80000000; pos > 0; pos >>= 1) {
 			//Multiply by 2
 			carry = 0;
@@ -47,7 +47,7 @@ std::string hugeint::toString () const {
 				ans.push_back(1);
 			}
 			// Add 1
-			if (bits[index] & pos) {
+			if (copy.bits[index] & pos) {
 				done = false;
 				for (char &chr : ans) {
 					if (chr == 9) {

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <chrono>
 
@@ -36,6 +35,9 @@ class calculator{
 private:
 	std::string equation;
 	std::string::iterator parse;
+
+	bool error;
+	std::string err_msg;
 
 	char peakChar(){
 		while(parse != equation.end() && *parse == ' ') {
@@ -84,17 +86,23 @@ private:
 		}
 		else{
 			hugeint result = 0;
+			bool neg = false;
+			if(peakChar() == '-'){
+				neg = true;
+				parse++;
+			}
 			while (getPriority() > 3) {
 				if(getPriority() == 5){
-					// TODO error handling
+					err_msg = (std::string)"Unrecognised symbol \'" + peakChar() + "\'.";
 					break;
 				}
 				result = result * 10 + *parse - '0';
 				parse++;
 			}
-			return result;
+			return (neg ? -result : result);
 		}
 	}
+
 	hugeint calcMultiplication(){
 		short int type = 0; // 0 - multiply, 1 - divide, 2 - modulo
 		hugeint result = 1;
@@ -110,8 +118,8 @@ private:
 			else if(type == 2) {
 				result %= calcWord();
 			}
-			// break if too high priority
-			if(getPriority() < 3) {
+			// break if too high priority or if a syntax error was found
+			if(getPriority() < 3 || error) {
 				break;
 			}
 			// get the next sign
@@ -152,8 +160,8 @@ private:
 			else if(type == 1) {
 				result -= calcMultiplication();
 			}
-			// break if too high priority
-			if(getPriority() < 2){
+			// break if too high priority or if a syntax error was found
+			if(getPriority() < 2 || error){
 				if(getPriority() == 1){
 					parse++;
 				}
@@ -170,26 +178,36 @@ private:
 				parse++;
 			}
 			else {
-				// TODO error handling
+				error = true;
+				err_msg = (std::string)"Unrecognised symbol \'" + peakChar() + "\'.";
 				result = 0;
 				break;
 			}
 		}
 		return result;
 	}
+
 public:
 	void setEquation(const std::string &get_equation) {
 		equation = get_equation;
 	}
 	hugeint getResult(){
+		error = false;
+		err_msg.clear();
 		parse = equation.begin();
 		peakChar();
-		return calcAdition();
+		hugeint result = calcAdition();
+		if (error) {
+			std::cout << err_msg << std::endl;
+			return 0;
+		}
+		else{
+			return result;
+		}
 	}
 };
 
 int main () {
-	std::ofstream fout("file.txt");
 	timer global;
 	std::string read;
 	calculator function;
@@ -197,8 +215,7 @@ int main () {
 	function.setEquation(read);
 	global.reset();
 	hugeint ans = function.getResult();
-	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer: " << ans << std::endl;
-	std::cout << "Output time (s):" << global.reset() << std::endl;
+	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout.flush();
 }
