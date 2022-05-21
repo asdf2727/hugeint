@@ -1,6 +1,6 @@
 # hugeint
 A C++ class that adds arbitrary precision integers with high performance that is very easily integrated into any project.
-All you need to do is replace hugeint with int in the declaration and the rest is done for you!
+All you need to do is replace int with hugeint in the declaration and the rest is done for you!
 
 It has all operators that are usable with a normal integer type, and I mean ALL of them.
 
