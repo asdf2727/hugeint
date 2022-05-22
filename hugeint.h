@@ -26,10 +26,18 @@ private:
 	bool neg;
 	std::deque <uint> bits;
 
-	// Casting functions
-private:
+	// Aditional functions
+public:
 	std::string toHex () const;
 	std::string toString () const;
+
+	std::size_t size() const;
+
+	hugeint &pow(ullint exponent);
+	friend hugeint pow(hugeint base, ullint exponent);
+
+	// Casting functions
+private:
 	void fromString (const std::string &to_copy);
 
 public:
@@ -57,9 +65,9 @@ public:
 	explicit operator std::string () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
-	hugeint &operator= (const sint &to_copy);
-	hugeint &operator= (const hugeint &to_copy);
+	hugeint &operator= (const hugeint &to_copy) = default;
 	hugeint &operator= (const bool &to_copy);
+	hugeint &operator= (const sint &to_copy);
 	hugeint &operator= (const int &to_copy);
 	hugeint &operator= (const llint &to_copy);
 	hugeint &operator= (const usint &to_copy);
