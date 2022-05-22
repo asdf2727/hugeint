@@ -10,6 +10,7 @@ TODO:
         add parsing for string conversion to allow for things like 0x, b, x, etc.
         add sensical % operator (with all positive modulo)
         implement square root
+        implement power modulo
         implicit conversions and warnings for them
  	faster algorithms:
  		decimal to hex and inverse casting
