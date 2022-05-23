@@ -205,5 +205,4 @@ int main () {
 	hugeint ans = function.getResult();
 	std::cout << "Answer: " << ans << std::endl;
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
-	std::cout.flush();
 }

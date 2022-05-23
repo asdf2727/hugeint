@@ -312,6 +312,7 @@ hugeint &hugeint::calculateMult (const hugeint &to_mult) {
 
 hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	hugeint ans, rest;
+	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
 		negate();
 	}
@@ -331,13 +332,14 @@ hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	if(to_div.neg){
 		delete calc;
 	}
-	if (neg ^ to_div.neg) {
+	if (is_neg) {
 		ans.negate();
 	}
 	return *this = ans;
 }
 hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	hugeint rest;
+	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
 		negate();
 	}
@@ -359,7 +361,7 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	if(to_div.neg) {
 		delete calc;
 	}
-	if (neg ^ to_div.neg) {
+	if (is_neg) {
 		rest.negate();
 	}
 	return *this = rest;

@@ -21,6 +21,7 @@ std::string hugeint::toHex () const {
 }
 std::string hugeint::toString () const {
 	const hugeint *calc = nullptr;
+	bool is_neg = neg;
 	if (neg) {
 		auto *negated = new hugeint(*this);
 		negated->negate();
@@ -72,7 +73,7 @@ std::string hugeint::toString () const {
 	for (char &chr : ans) {
 		chr += '0';
 	}
-	if (neg) {
+	if (is_neg) {
 		delete calc;
 		ans.push_back('-');
 	}

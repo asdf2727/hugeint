@@ -3,6 +3,7 @@ TODO:
     examples:
         add more operators to the arithmetic calculator
     clean the code:
+        Use template for pow
         make both constructor and assignment have difrent code
     features:
         add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
