@@ -27,7 +27,7 @@ void hugeint::negate () {
 	clearZeros();
 }
 
-// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+	// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
 bool hugeint::addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast) {
 	llint rez = 0;
 	for (std::size_t index = 0; index < nr1.size(); index++) {
@@ -282,18 +282,23 @@ hugeint &hugeint::calculateDec (const hugeint &to_dec) {
 	return *this;
 }
 
-hugeint &hugeint::calculateMult (hugeint to_mult) {
+hugeint &hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
 	if (neg) {
 		negate();
 	}
-	if (to_mult.neg) {
-		to_mult.negate();
-	}
 	std::deque <uint> num1, num2;
 	int max_size = 0;
 	num1 = bits;
-	num2 = to_mult.bits;
+	if (to_mult.neg) {
+		auto *negated = new hugeint(to_mult);
+		negated->negate();
+		num2 = negated->bits;
+		delete negated;
+	}
+	else {
+		num2 = to_mult.bits;
+	}
 	for (max_size = 1; max_size < std::max(num1.size(), num2.size()); max_size <<= 1);
 	num1.resize(max_size);
 	num2.resize(max_size);
@@ -305,40 +310,56 @@ hugeint &hugeint::calculateMult (hugeint to_mult) {
 	return *this;
 }
 
-hugeint &hugeint::calculateDiv (hugeint to_div) {
+hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	hugeint ans, rest;
-	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
 		negate();
 	}
+	const hugeint *calc = nullptr;
 	if (to_div.neg) {
-		to_div.negate();
+		auto *negated = new hugeint(to_div);
+		negated->negate();
+		calc = negated;
+	}
+	else {
+		calc = &to_div;
 	}
 	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
 		rest.bits.push_front(bits[index]);
-		ans.bits.push_front(to_div <= rest ? divBinSearch(rest, to_div) : 0);
+		ans.bits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
 	}
-	if (is_neg) {
+	if(to_div.neg){
+		delete calc;
+	}
+	if (neg ^ to_div.neg) {
 		ans.negate();
 	}
 	return *this = ans;
 }
-hugeint &hugeint::calculateMod (hugeint to_div) {
+hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	hugeint rest;
-	bool is_neg = neg;
 	if (neg) {
 		negate();
 	}
+	const hugeint *calc = nullptr;
 	if (to_div.neg) {
-		to_div.negate();
+		auto *negated = new hugeint(to_div);
+		negated->negate();
+		calc = negated;
+	}
+	else {
+		calc = &to_div;
 	}
 	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
 		rest.bits.push_front(bits[index]);
-		if (to_div <= rest) {
-			divBinSearch(rest, to_div);
+		if (*calc <= rest) {
+			divBinSearch(rest, *calc);
 		}
 	}
-	if (is_neg) {
+	if(to_div.neg) {
+		delete calc;
+	}
+	if (neg ^ to_div.neg) {
 		rest.negate();
 	}
 	return *this = rest;

@@ -19,18 +19,6 @@ public:
 	}
 };
 
-hugeint logPow (hugeint base, hugeint pow) {
-	hugeint ans = 1;
-	while (pow > 0) {
-		if ((pow & 1) == 1) {
-			ans *= base;
-		}
-		base *= base;
-		pow >>= 1;
-	}
-	return ans;
-}
-
 class calculator{
 private:
 	std::string equation;

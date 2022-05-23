@@ -103,11 +103,11 @@ private:
 	bool addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast);
 	void decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2);
 	std::deque <uint> karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size);
-	hugeint &calculateMult (hugeint to_mult);
+	hugeint &calculateMult (const hugeint &to_mult);
 
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
-	hugeint &calculateDiv (hugeint to_div);
-	hugeint &calculateMod (hugeint to_div);
+	hugeint &calculateDiv (const hugeint &to_div);
+	hugeint &calculateMod (const hugeint &to_div);
 
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
