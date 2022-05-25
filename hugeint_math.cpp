@@ -1,6 +1,13 @@
 #include "hugeint.h"
 
 // General
+
+// Size also works as log2 (gives the biggest bit 1)
+std::size_t hugeint::size() const {
+	ullint size = bits.size() << 5;
+	for(uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+	return size;
+}
 void hugeint::resize (std::size_t new_size) {
 	std::size_t old_size = bits.size();
 	bits.resize(new_size);
@@ -27,7 +34,7 @@ void hugeint::negate () {
 	clearZeros();
 }
 
-	// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
 bool hugeint::addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast) {
 	llint rez = 0;
 	for (std::size_t index = 0; index < nr1.size(); index++) {
@@ -365,4 +372,27 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 		rest.negate();
 	}
 	return *this = rest;
+}
+
+hugeint hugeint::calculatePow(ullint exponent) {
+	hugeint result = 1;
+	for(ullint bit = 1; bit <= exponent; bit <<= 1) {
+		if (exponent & bit) {
+			result *= *this;
+		}
+		*this *= *this;
+	}
+	return *this = result;
+}
+hugeint hugeint::calculateModPow(ullint exponent, const hugeint &to_div) {
+	hugeint result = 1;
+	for(ullint bit = 1; bit <= exponent; bit <<= 1) {
+		if (exponent & bit) {
+			result *= *this;
+			result %= to_div;
+		}
+		*this *= *this;
+		*this %= to_div;
+	}
+	return *this = result;
 }

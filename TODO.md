@@ -1,14 +1,12 @@
-TODO:
+# todo
     Get ideas form other implementations like this one: https://faheel.github.io/BigInt/
     examples:
         add more operators to the arithmetic calculator
     clean the code:
-        Use template for pow
         make both constructor and assignment have difrent code
     features:
         add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
         implement square root
-        implement power modulo
         implicit conversions and warnings for them
  	faster algorithms:
  		decimal to hex and inverse casting

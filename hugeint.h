@@ -33,9 +33,6 @@ public:
 
 	std::size_t size() const;
 
-	hugeint &pow(ullint exponent);
-	friend hugeint pow(hugeint base, ullint exponent);
-
 	// Casting functions
 private:
 	void fromString (const std::string &to_copy);
@@ -108,6 +105,9 @@ private:
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
 	hugeint &calculateDiv (const hugeint &to_div);
 	hugeint &calculateMod (const hugeint &to_div);
+
+	hugeint calculatePow(ullint exponent);
+	hugeint calculateModPow(ullint exponent, const hugeint &to_div);
 
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
@@ -454,6 +454,21 @@ public:
 		hugeint result = lhs;
 		result.calculateMod(rhs);
 		return result;
+	}
+
+	INTEGER_TEMP hugeint pow(Integer exponent) const {
+		return calculatePow(exponent);
+	}
+	INTEGER_TEMP hugeint pow(Integer exponent, const hugeint &modulo) const {
+		return calculateModPow(exponent, modulo);
+	}
+	INTEGER_TEMP friend hugeint pow(const hugeint &base, Integer exponent) {
+		hugeint copy = base;
+		return copy.calculatePow(exponent);
+	}
+	INTEGER_TEMP friend hugeint pow(const hugeint &base, Integer exponent, const hugeint &modulo) {
+		hugeint copy = base;
+		return copy.calculateModPow(exponent, modulo);
 	}
 };
 
