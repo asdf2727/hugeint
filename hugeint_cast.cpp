@@ -107,36 +107,68 @@ hugeint::hugeint () {
 	neg = false;
 }
 hugeint::hugeint (const hugeint &to_copy) {
-	this->operator=(to_copy);
+	bits = to_copy.bits;
+	neg = to_copy.neg;
 }
 hugeint::hugeint (hugeint &&to_copy) noexcept {
-	this->operator=(std::move(to_copy));
+	bits = std::move(to_copy.bits);
+	neg = to_copy.neg;
 }
-hugeint::hugeint (const bool &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const bool &to_copy) : bits() {
+	neg = false;
+	if (to_copy) {
+		bits.push_back(1);
+	}
 }
-hugeint::hugeint (const sint &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const sint &to_copy) : bits() {
+	neg = to_copy < 0;
+	if (to_copy) {
+		bits.push_back(to_copy);
+	}
 }
-hugeint::hugeint (const int &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const int &to_copy) : bits() {
+	neg = to_copy < 0;
+	if (to_copy) {
+		bits.push_back(to_copy);
+	}
 }
-hugeint::hugeint (const llint &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const llint &to_copy) : bits() {
+	neg = to_copy < 0;
+	ullint copy = *((uint *)&to_copy);
+	if (to_copy) {
+		bits.push_back((uint)to_copy);
+	}
+	if (to_copy >> 32) {
+		bits.push_back(to_copy >> 32);
+	}
 }
-hugeint::hugeint (const usint &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const usint &to_copy) : bits() {
+	neg = false;
+	if (to_copy) {
+		bits.push_back(to_copy);
+	}
 }
-hugeint::hugeint (const uint &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const uint &to_copy) : bits() {
+	neg = false;
+	if (to_copy) {
+		bits.push_back(to_copy);
+	}
 }
-hugeint::hugeint (const ullint &to_copy) {
-	this->operator=(to_copy);
+hugeint::hugeint (const ullint &to_copy) : bits() {
+	neg = false;
+	if (to_copy) {
+		bits.push_back((uint)to_copy);
+	}
+	if (to_copy >> 32) {
+		bits.push_back(to_copy >> 32);
+	}
 }
-hugeint::hugeint (const char *to_copy) {
+hugeint::hugeint (const char *to_copy) : bits() {
+	neg = false;
 	fromString((std::string)to_copy);
 }
-hugeint::hugeint (const std::string &to_copy) {
+hugeint::hugeint (const std::string &to_copy) : bits() {
+	neg = false;
 	fromString(to_copy);
 }
 
@@ -144,7 +176,7 @@ hugeint::operator bool () const {
 	return (!bits.empty() || neg);
 }
 hugeint::operator short int () const {
-	return (bits.empty() ? 0 : (sint)bits[0] * (1 - 2 * neg));
+	return (bits.empty() ? 0 : (sint)(neg ? -bits[0] : bits[0]));
 }
 hugeint::operator int () const {
 	return (bits.empty() ? 0 : (int)bits[0] * (1 - 2 * neg));

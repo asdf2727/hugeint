@@ -3,7 +3,7 @@
 // General
 
 // Size also works as log2 (gives the biggest bit 1)
-std::size_t hugeint::size() const {
+unsigned long long int hugeint::size() const {
 	ullint size = bits.size() << 5;
 	for(uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
 	return size;
@@ -28,8 +28,8 @@ void hugeint::invert () {
 	}
 }
 void hugeint::negate () {
-	invert();
 	neg = !neg;
+	invert();
 	this->increment();
 	clearZeros();
 }

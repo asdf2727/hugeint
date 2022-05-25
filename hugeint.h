@@ -26,21 +26,14 @@ private:
 	bool neg;
 	std::deque <uint> bits;
 
-	// Aditional functions
-public:
-	std::string toHex () const;
-	std::string toString () const;
-
-	std::size_t size() const;
-
 	// Casting functions
 private:
 	void fromString (const std::string &to_copy);
 
 public:
 	hugeint ();
-	hugeint (const hugeint &to_copy);
 	hugeint (hugeint &&to_copy) noexcept;
+	hugeint (const hugeint &to_copy);
 	hugeint (const bool &to_copy);
 	hugeint (const sint &to_copy);
 	hugeint (const int &to_copy);
@@ -72,11 +65,15 @@ public:
 	hugeint &operator= (const ullint &to_copy);
 	hugeint &operator= (const std::string &to_copy);
 
+	std::string toHex () const;
+	std::string toString () const;
+
 	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
 	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
 
 	// Mathematical functions
 private:
+	ullint size() const;
 	void resize (std::size_t new_size);
 	void clearZeros ();
 	void invert ();
