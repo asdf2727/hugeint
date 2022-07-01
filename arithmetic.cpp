@@ -19,7 +19,7 @@ public:
 	}
 };
 
-class calculator{
+class calculator {
 private:
 	std::string equation;
 	std::string::iterator parse;

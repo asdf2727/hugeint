@@ -27,7 +27,7 @@ void hugeint::negate () {
 	clearZeros();
 }
 
-	// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
 bool hugeint::addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast) {
 	llint rez = 0;
 	for (std::size_t index = 0; index < nr1.size(); index++) {
