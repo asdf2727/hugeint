@@ -117,7 +117,14 @@ private:
 			return result;
 		}
 		getChar();
-		result.pow(calcPower());
+		hugeint exp = calcPower();
+		if (exp != (int)exp) {
+			error = true;
+			err_msg = "Result is too big!";
+		}
+		else {
+			result.pow(exp);
+		}
 #endif
 		return result;
 	}
