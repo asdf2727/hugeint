@@ -4,13 +4,12 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 examples:
 
-	add more operators to the arithmetic calculator
+	add ^ to the example calulator
 
 features:
 
 	add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
-	implement square root
-	implicit conversions and warnings for them
+	implement nth root
 
 faster algorithms:
 

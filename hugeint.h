@@ -44,15 +44,15 @@ public:
 	hugeint (const char *to_copy);
 	hugeint (const std::string &to_copy);
 
-	explicit operator bool () const;
-	explicit operator short int () const;
-	explicit operator int () const;
-	explicit operator long long int () const;
-	explicit operator unsigned short int () const;
-	explicit operator unsigned int () const;
-	explicit operator unsigned long long int () const;
-	explicit operator const char * () const;
-	explicit operator std::string () const;
+	operator bool () const;
+	operator short int () const;
+	operator int () const;
+	operator long long int () const;
+	operator unsigned short int () const;
+	operator unsigned int () const;
+	operator unsigned long long int () const;
+	operator const char * () const;
+	operator std::string () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
@@ -73,7 +73,7 @@ public:
 
 	// Mathematical functions
 private:
-	ullint size() const;
+	ullint size () const;
 	void resize (std::size_t new_size);
 	void clearZeros ();
 	void invert ();
@@ -103,8 +103,8 @@ private:
 	hugeint &calculateDiv (const hugeint &to_div);
 	hugeint &calculateMod (const hugeint &to_div);
 
-	hugeint calculatePow(ullint exponent);
-	hugeint calculateModPow(ullint exponent, const hugeint &to_div);
+	hugeint calculatePow (ullint exponent);
+	hugeint calculateModPow (ullint exponent, const hugeint &to_div);
 
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
@@ -353,7 +353,7 @@ public:
 		return lhs -= (NotHugeint)rhs;
 	}
 
-	friend hugeint operator- (const hugeint &lhs){
+	friend hugeint operator- (const hugeint &lhs) {
 		hugeint result = lhs;
 		result.negate();
 		return result;
@@ -453,17 +453,17 @@ public:
 		return result;
 	}
 
-	INTEGER_TEMP hugeint pow(Integer exponent) const {
+	INTEGER_TEMP hugeint pow (Integer exponent) {
 		return calculatePow(exponent);
 	}
-	INTEGER_TEMP hugeint pow(Integer exponent, const hugeint &modulo) const {
+	INTEGER_TEMP hugeint pow (Integer exponent, const hugeint &modulo) {
 		return calculateModPow(exponent, modulo);
 	}
-	INTEGER_TEMP friend hugeint pow(const hugeint &base, Integer exponent) {
+	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent) {
 		hugeint copy = base;
 		return copy.calculatePow(exponent);
 	}
-	INTEGER_TEMP friend hugeint pow(const hugeint &base, Integer exponent, const hugeint &modulo) {
+	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent, const hugeint &modulo) {
 		hugeint copy = base;
 		return copy.calculateModPow(exponent, modulo);
 	}

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <stack>
 
 #include "hugeint.h"
 
@@ -58,10 +59,13 @@ private:
 			else if (now == '*' || now == '/' || now == '%') {
 				return 3;
 			}
-			else if ('0' <= now && now <= '9') {
+			else if (now == '^') {
 				return 4;
 			}
-			return 5;
+			else if ('0' <= now && now <= '9') {
+				return 5;
+			}
+			return 6;
 		}
 	}
 
@@ -77,8 +81,8 @@ private:
 				getChar();
 				neg = true;
 			}
-			while (getPriority() > 3) {
-				if (getPriority() != 4) {
+			while (getPriority() > 4) {
+				if (getPriority() != 5) {
 					if (*parse != ' ') {
 						err_msg = (std::string)"Unrecognised symbol \'" + *parse + "\'.";
 						error = true;
@@ -92,6 +96,15 @@ private:
 		}
 	}
 
+	hugeint calcPower () {
+		hugeint result = calcWord();
+		peakChar();
+		if (getPriority() < 4 || error) {
+			return result;
+		}
+		return pow(result, calcPower());
+	}
+
 	hugeint calcMultiplication () {
 		short int type = 0; // 0 - multiply, 1 - divide, 2 - modulo
 		hugeint result = 1;
@@ -99,13 +112,13 @@ private:
 		while (true) {
 			// recursive call
 			if (type == 0) {
-				result *= calcWord();
+				result *= calcPower();
 			}
 			else if (type == 1) {
-				result /= calcWord();
+				result /= calcPower();
 			}
 			else if (type == 2) {
-				result %= calcWord();
+				result %= calcPower();
 			}
 			newChar = peakChar();
 			// break if too high priority or if a syntax error was found
