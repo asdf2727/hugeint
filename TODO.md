@@ -2,30 +2,34 @@
 
 Get ideas form other implementations like this one: https://faheel.github.io/BigInt/
 
-examples:
+### examples:
 
-	add ^ to the example calulator
+- [x] add ^ to the example calulator
 
-features:
+### features:
 
-	add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
-	implement nth root
+- [ ] add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
+- [ ] implement nth root
 
-faster algorithms:
+### faster algorithms:
 
-	decimal to hex and inverse casting 
-		divide and conquer
-	division
-		see if there even is an algorithm
-	multiplication
-		add simple multiplication for small * big
-		if you have and sanity left try Schonhage-Strassen: https://en.wikipedia.org/wiki/Sch%C3%B6nhage%E2%80%93Strassen_algorithm
+- [ ] decimal to hex and inverse casting
+  divide and conquer
+- [ ] division
 
-to test:
+    - see if there even is an algorithm
 
-	all
+- [ ] multiplication
 
-where to publish:
+    - add simple multiplication for small * big
+    - if you have any sanity left try
+      Schonhage-Strassen: https://en.wikipedia.org/wiki/Sch%C3%B6nhage%E2%80%93Strassen_algorithm
 
-	reddit
-	hackernews
+### to test:
+
+- [ ] all
+
+### where to publish:
+
+- [ ] reddit
+- [ ] hackernews

@@ -5,6 +5,8 @@
 
 #include "hugeint.h"
 
+//#define LtoRpower
+
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
 	std::chrono::duration <double> time;
@@ -98,11 +100,26 @@ private:
 
 	hugeint calcPower () {
 		hugeint result = calcWord();
+#ifdef LtoRpower
+		while (true) {
+			peakChar();
+			// break if wrong priority or if a syntax error was found
+			if (getPriority() != 4 || error) {
+				break;
+			}
+			getChar();
+			result.pow(calcWord());
+		}
+#else
 		peakChar();
-		if (getPriority() < 4 || error) {
+		// break if wrong priority or if a syntax error was found
+		if (getPriority() != 4 || error) {
 			return result;
 		}
-		return pow(result, calcPower());
+		getChar();
+		result.pow(calcPower());
+#endif
+		return result;
 	}
 
 	hugeint calcMultiplication () {
@@ -121,8 +138,8 @@ private:
 				result %= calcPower();
 			}
 			newChar = peakChar();
-			// break if too high priority or if a syntax error was found
-			if (getPriority() < 3 || error) {
+			// break if wrong priority or if a syntax error was found
+			if (getPriority() != 3 || error) {
 				break;
 			}
 			// get the next sign
@@ -160,8 +177,8 @@ private:
 				result -= calcMultiplication();
 			}
 			newChar = peakChar();
-			// break if too high priority or if a syntax error was found
-			if (getPriority() < 2 || error) {
+			// break if wrong priority or if a syntax error was found
+			if (getPriority() != 2 || error) {
 				if (getPriority() == 1) {
 					parse++;
 				}
