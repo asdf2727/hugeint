@@ -26,24 +26,27 @@ private:
 	bool neg;
 	std::deque <uint> bits;
 
-	// Aditional functions
-public:
-	std::string toHex () const;
-	std::string toString () const;
-
-	std::size_t size() const;
-
-	hugeint &pow(ullint exponent);
-	friend hugeint pow(hugeint base, ullint exponent);
-
 	// Casting functions
 private:
-	void fromString (const std::string &to_copy);
+	bool fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
 public:
+	bool fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+
+	std::string toHex () const;
+	std::string toDec () const;
+	std::string toOct () const;
+	std::string toBin () const;
+
+	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
+	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
+
 	hugeint ();
-	hugeint (const hugeint &to_copy);
 	hugeint (hugeint &&to_copy) noexcept;
+	hugeint (const hugeint &to_copy);
 	hugeint (const bool &to_copy);
 	hugeint (const sint &to_copy);
 	hugeint (const int &to_copy);
@@ -54,15 +57,14 @@ public:
 	hugeint (const char *to_copy);
 	hugeint (const std::string &to_copy);
 
-	explicit operator bool () const;
-	explicit operator short int () const;
-	explicit operator int () const;
-	explicit operator long long int () const;
-	explicit operator unsigned short int () const;
-	explicit operator unsigned int () const;
-	explicit operator unsigned long long int () const;
-	explicit operator const char * () const;
-	explicit operator std::string () const;
+	operator bool () const;
+	operator short int () const;
+	operator int () const;
+	operator long long int () const;
+	operator unsigned short int () const;
+	operator unsigned int () const;
+	operator unsigned long long int () const;
+	operator const char * () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
@@ -73,13 +75,12 @@ public:
 	hugeint &operator= (const usint &to_copy);
 	hugeint &operator= (const uint &to_copy);
 	hugeint &operator= (const ullint &to_copy);
+	hugeint &operator= (const char *to_copy);
 	hugeint &operator= (const std::string &to_copy);
-
-	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
-	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
 
 	// Mathematical functions
 private:
+	ullint size () const;
 	void resize (std::size_t new_size);
 	void clearZeros ();
 	void invert ();
@@ -108,6 +109,9 @@ private:
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
 	hugeint &calculateDiv (const hugeint &to_div);
 	hugeint &calculateMod (const hugeint &to_div);
+
+	hugeint calculatePow (ullint exponent);
+	hugeint calculateModPow (ullint exponent, const hugeint &to_div);
 
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
@@ -356,7 +360,7 @@ public:
 		return lhs -= (NotHugeint)rhs;
 	}
 
-	friend hugeint operator- (const hugeint &lhs){
+	friend hugeint operator- (const hugeint &lhs) {
 		hugeint result = lhs;
 		result.negate();
 		return result;
@@ -454,6 +458,21 @@ public:
 		hugeint result = lhs;
 		result.calculateMod(rhs);
 		return result;
+	}
+
+	INTEGER_TEMP hugeint pow (Integer exponent) {
+		return calculatePow(exponent);
+	}
+	INTEGER_TEMP hugeint pow (Integer exponent, const hugeint &modulo) {
+		return calculateModPow(exponent, modulo);
+	}
+	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent) {
+		hugeint copy = base;
+		return copy.calculatePow(exponent);
+	}
+	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent, const hugeint &modulo) {
+		hugeint copy = base;
+		return copy.calculateModPow(exponent, modulo);
 	}
 };
 
