@@ -28,9 +28,22 @@ private:
 
 	// Casting functions
 private:
-	void fromString (const std::string &to_copy);
+	bool fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	bool fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
 public:
+	bool fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+
+	std::string toHex () const;
+	std::string toDec () const;
+	std::string toOct () const;
+	std::string toBin () const;
+
+	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
+	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
+
 	hugeint ();
 	hugeint (hugeint &&to_copy) noexcept;
 	hugeint (const hugeint &to_copy);
@@ -52,7 +65,6 @@ public:
 	operator unsigned int () const;
 	operator unsigned long long int () const;
 	operator const char * () const;
-	operator std::string () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
@@ -63,13 +75,8 @@ public:
 	hugeint &operator= (const usint &to_copy);
 	hugeint &operator= (const uint &to_copy);
 	hugeint &operator= (const ullint &to_copy);
+	hugeint &operator= (const char *to_copy);
 	hugeint &operator= (const std::string &to_copy);
-
-	std::string toHex () const;
-	std::string toString () const;
-
-	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
-	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
 
 	// Mathematical functions
 private:

@@ -5,7 +5,7 @@
 
 #include "hugeint.h"
 
-//#define LtoRpower
+#define L_TO_R_POWER
 
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
@@ -77,30 +77,27 @@ private:
 			return calcAdition();
 		}
 		else {
-			hugeint result = 0;
 			bool neg = false;
 			if (peakChar() == '-') {
 				getChar();
 				neg = true;
 			}
+			std::string::const_iterator start = parse;
 			while (getPriority() > 4) {
-				if (getPriority() != 5) {
-					if (*parse != ' ') {
-						err_msg = (std::string)"Unrecognised symbol \'" + *parse + "\'.";
-						error = true;
-					}
-					break;
-				}
-				result = result * 10 + *parse - '0';
 				parse++;
 			}
-			return (neg ? -result : result);
+			hugeint result;
+			if (!error && !result.fromString(start, parse)) {
+				err_msg = (std::string)"Unrecognised symbol inside a number.";
+				error = true;
+			}
+			return result;
 		}
 	}
 
 	hugeint calcPower () {
 		hugeint result = calcWord();
-#ifdef LtoRpower
+#ifdef L_TO_R_POWER
 		while (true) {
 			peakChar();
 			// break if wrong priority or if a syntax error was found
@@ -237,6 +234,12 @@ int main () {
 	example.setEquation(read);
 	global.reset();
 	hugeint ans = example.getResult();
-	std::cout << "Answer: " << ans << std::endl;
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
+	std::cout << "Answer: " << std::endl;
+	std::cout << "Hexadecimal: " << ans.toHex() << std::endl;
+	std::cout << "Decimal:     " << ans.toDec() << std::endl;
+	std::cout << "Octal:       " << ans.toOct() << std::endl;
+	std::cout << "Binary:      " << ans.toBin() << std::endl;
+	std::cout << "Output time (s):" << global.reset() << std::endl;
+
 }
