@@ -73,7 +73,7 @@ bool hugeint::fromOct (const std::string::const_iterator &start, const std::stri
 }
 bool hugeint::fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++) {
-		if (*pos == 0 || *pos == '1') {
+		if (*pos != '0' && *pos != '1') {
 			return false;
 		}
 	}
@@ -109,14 +109,8 @@ bool hugeint::fromString (const std::string::const_iterator &begin, const std::s
 			start++;
 			isNeg = true;
 		}
-		stop--;
-		if (('0' <= *stop && *stop <= '9') || ('a' <= *stop && *stop <= 'f') || ('A' <= *stop && *stop <= 'F')) {
-			stop++;
-			bool pref0 = false;
-			if (*start == '0') {
-				pref0 = true;
-				start++;
-			}
+		if (*start == '0') {
+			start++;
 			if (*start == 'x' || *start == 'X') {
 				ans = fromHex(++start, stop);
 			}
@@ -126,25 +120,29 @@ bool hugeint::fromString (const std::string::const_iterator &begin, const std::s
 			else if (*start == 'b' || *start == 'B') {
 				ans = fromBin(++start, stop);
 			}
-			else if (pref0) {
-				ans = fromOct(start, stop);
-			}
 			else {
-				ans = fromDec(start, stop);
+				ans = fromOct(start, stop);
 			}
 		}
 		else {
-			if (*stop == 'x' || *stop == 'X') {
-				ans = fromHex(start, stop);
-			}
-			else if (*stop == 'o' || *stop == 'O') {
-				ans = fromOct(start, stop);
-			}
-			else if (*stop == 'b' || *stop == 'B') {
-				ans = fromBin(start, stop);
+			stop--;
+			if ('0' <= *stop && *stop <= '9') {
+				stop++;
+				ans = fromDec(start, stop);
 			}
 			else {
-				return false;
+				if (*stop == 'x' || *stop == 'X') {
+					ans = fromHex(start, stop);
+				}
+				else if (*stop == 'o' || *stop == 'O') {
+					ans = fromOct(start, stop);
+				}
+				else if (*stop == 'b' || *stop == 'B') {
+					ans = fromBin(start, stop);
+				}
+				else {
+					return false;
+				}
 			}
 		}
 	}
