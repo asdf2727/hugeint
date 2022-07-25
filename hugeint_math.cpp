@@ -1,6 +1,13 @@
 #include "hugeint.h"
 
-// General
+// Internals
+
+// Size also works as log2 (gives the biggest bit 1)
+unsigned long long int hugeint::size () const {
+	ullint size = bits.size() << 5;
+	for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+	return size;
+}
 void hugeint::resize (std::size_t new_size) {
 	std::size_t old_size = bits.size();
 	bits.resize(new_size);
@@ -21,9 +28,9 @@ void hugeint::invert () {
 	}
 }
 void hugeint::negate () {
-	invert();
 	neg = !neg;
-	this->increment();
+	invert();
+	increment();
 	clearZeros();
 }
 
@@ -122,7 +129,7 @@ unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
 	return calc;
 }
 
-// Called by publics
+// Publics
 bool hugeint::compareSml (const hugeint &to_comp) const {
 	if (neg != to_comp.neg) {
 		return neg;
@@ -261,6 +268,9 @@ hugeint &hugeint::calculateAdd (const hugeint &to_add) {
 	ullint sav = 0;
 	resize(std::max(bits.size(), to_add.bits.size()) + 1);
 	for (std::size_t index = 0; index < bits.size(); index++) {
+		if (index >= to_add.bits.size() && !to_add.neg && sav == 0) {
+			break;
+		}
 		sav += (ullint)bits[index] + (index < to_add.bits.size() ? to_add.bits[index] : (to_add.neg ? 0xffffffff : 0));
 		bits[index] = (uint)sav;
 		sav >>= 32;
@@ -273,6 +283,9 @@ hugeint &hugeint::calculateDec (const hugeint &to_dec) {
 	ullint sav = 0;
 	resize(std::max(bits.size(), to_dec.bits.size()) + 1);
 	for (std::size_t index = 0; index < bits.size(); index++) {
+		if (index >= to_dec.bits.size() && !to_dec.neg && sav == 0) {
+			break;
+		}
 		sav += (ullint)bits[index] - (index < to_dec.bits.size() ? to_dec.bits[index] : (to_dec.neg ? 0xffffffff : 0));
 		bits[index] = (uint)sav;
 		sav = (sav & 0xffffffff00000000) + (sav >> 32); // keep the negative for carry
@@ -329,7 +342,7 @@ hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 		rest.bits.push_front(bits[index]);
 		ans.bits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
 	}
-	if(to_div.neg){
+	if (to_div.neg) {
 		delete calc;
 	}
 	if (is_neg) {
@@ -358,11 +371,34 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 			divBinSearch(rest, *calc);
 		}
 	}
-	if(to_div.neg) {
+	if (to_div.neg) {
 		delete calc;
 	}
 	if (is_neg) {
 		rest.negate();
 	}
 	return *this = rest;
+}
+
+hugeint hugeint::calculatePow (ullint exponent) {
+	hugeint result = 1;
+	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
+		if (exponent & bit) {
+			result *= *this;
+		}
+		*this *= *this;
+	}
+	return *this = result;
+}
+hugeint hugeint::calculateModPow (ullint exponent, const hugeint &to_div) {
+	hugeint result = 1;
+	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
+		if (exponent & bit) {
+			result *= *this;
+			result %= to_div;
+		}
+		*this *= *this;
+		*this %= to_div;
+	}
+	return *this = result;
 }
