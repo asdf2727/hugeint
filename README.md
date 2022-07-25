@@ -6,7 +6,7 @@ It has all operators that are usable with a normal integer type, and I mean ALL 
 
     -asignment functions: = operator, constuctors and casting operators for any integer type
     -comparison operators: ==, !=, <, >, <=, >=;
-    -bit operators: ~, &=, &, |=, |, ^=, ^, <<=, <<, >>=, >>;
+    -binary operators: ~, &=, &, |=, |, ^=, ^, <<=, <<, >>=, >>;
     -adition and subtraction operators: ++ and --(both pre and post increment), +=, +, -=, -;
     -multiplication and division operators: *=, *, /=, /, %=, %;
     -iostream input and output operators: <<, >>.
