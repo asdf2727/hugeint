@@ -1,10 +1,11 @@
 #include "hugeint.h"
 
 // Internals
-bool hugeint::fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
-	for (std::string::const_iterator pos = start; pos != stop; pos++) {
+int hugeint::fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
+	int errPos = 0;
+	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
 		if (('0' > *pos || *pos > '9') && ('a' > *pos || *pos > 'z') && ('A' > *pos || *pos > 'Z')) {
-			return false;
+			return errPos;
 		}
 	}
 	ullint form = 0;
@@ -31,12 +32,13 @@ bool hugeint::fromHex (const std::string::const_iterator &start, const std::stri
 	}
 	bits.push_back((uint)form);
 	clearZeros();
-	return true;
+	return -1;
 }
-bool hugeint::fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
-	for (std::string::const_iterator pos = start; pos != stop; pos++) {
+int hugeint::fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
+	int errPos = 0;
+	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
 		if ('0' > *pos || *pos > '9') {
-			return false;
+			return errPos;
 		}
 	}
 	bits.clear();
@@ -45,12 +47,13 @@ bool hugeint::fromDec (const std::string::const_iterator &start, const std::stri
 		calculateMult(10);
 		calculateAdd(*pos - '0');
 	}
-	return true;
+	return -1;
 }
-bool hugeint::fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
-	for (std::string::const_iterator pos = start; pos != stop; pos++) {
+int hugeint::fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
+	int errPos = 0;
+	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
 		if ('0' > *pos || *pos > '7') {
-			return false;
+			return errPos;
 		}
 	}
 	ullint form = 0;
@@ -69,12 +72,13 @@ bool hugeint::fromOct (const std::string::const_iterator &start, const std::stri
 	}
 	bits.push_back((uint)form);
 	clearZeros();
-	return true;
+	return -1;
 }
-bool hugeint::fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
-	for (std::string::const_iterator pos = start; pos != stop; pos++) {
+int hugeint::fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop) {
+	int errPos = 0;
+	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
 		if (*pos != '0' && *pos != '1') {
-			return false;
+			return errPos;
 		}
 	}
 	ullint form = 0;
@@ -93,12 +97,13 @@ bool hugeint::fromBin (const std::string::const_iterator &start, const std::stri
 	}
 	bits.push_back((uint)form);
 	clearZeros();
-	return true;
+	return -1;
 }
 
 // Publics
-bool hugeint::fromString (const std::string::const_iterator &begin, const std::string::const_iterator &end) {
-	bool isNeg = false, ans = true;
+int hugeint::fromString (const std::string::const_iterator &begin, const std::string::const_iterator &end) {
+	bool isNeg = false;
+	int ans = -1;
 	std::string::const_iterator start = begin, stop = end;
 	if (begin == end) {
 		bits.clear();
@@ -109,8 +114,10 @@ bool hugeint::fromString (const std::string::const_iterator &begin, const std::s
 			start++;
 			isNeg = true;
 		}
-		if (*start == '0') {
+		stop--;
+		if (('0' <= *end && *end <= '9') || ('0' <= *end && *end <= '9') || ('0' <= *end && *end <= '9') || (*start != 0 && *end == 'b')) {
 			start++;
+			stop++;
 			if (*start == 'x' || *start == 'X') {
 				ans = fromHex(++start, stop);
 			}
@@ -125,7 +132,6 @@ bool hugeint::fromString (const std::string::const_iterator &begin, const std::s
 			}
 		}
 		else {
-			stop--;
 			if ('0' <= *stop && *stop <= '9') {
 				stop++;
 				ans = fromDec(start, stop);
@@ -141,12 +147,14 @@ bool hugeint::fromString (const std::string::const_iterator &begin, const std::s
 					ans = fromBin(start, stop);
 				}
 				else {
-					return false;
+					int errPos = (isNeg ? 1 : 0);
+					for (; start != stop; start++);
+					return errPos;
 				}
 			}
 		}
 	}
-	if (ans && isNeg) {
+	if (ans == -1 && isNeg) {
 		negate();
 	}
 	return ans;

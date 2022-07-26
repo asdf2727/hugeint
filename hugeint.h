@@ -28,13 +28,13 @@ private:
 
 	// Casting functions
 private:
-	bool fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	bool fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	bool fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	bool fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
 public:
-	bool fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
 	std::string toHex () const;
 	std::string toDec () const;

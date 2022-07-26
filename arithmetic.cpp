@@ -5,7 +5,7 @@
 
 #include "hugeint.h"
 
-#define L_TO_R_POWER
+//#define L_TO_R_POWER
 
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
@@ -70,7 +70,8 @@ private:
 			while (parse != equation.end() && isValid()) {
 				parse++;
 			}
-			if (!ans.fromString(start, parse)) {
+			int errPos = ans.fromString(start, parse);
+			if (errPos != -1) {
 				// Error handling
 			}
 			return ans;
@@ -81,22 +82,26 @@ private:
 		hugeint temp;
 		bool willContinue = readOperator(result, 3);
 #ifdef L_TO_R_POWER
+
 		while (willContinue) {
+			parse++;
 			temp = readNumber();
 			willContinue = readOperator(temp, 3);
 			result.pow(temp);
 		}
 #else
+		std::vector <hugeint> numbers;
 		while (willContinue) {
+			parse++;
 			temp = readNumber();
 			willContinue = readOperator(temp, 3);
 			numbers.push_back(temp);
 		}
-		std::vector <hugeint> numbers;
-		while(numbers.size() > 1){
+		while (numbers.size() > 1) {
 			numbers[numbers.size() - 2].pow(numbers.back());
 			numbers.pop_back();
 		}
+		result.pow(numbers[0]);
 #endif
 	}
 
@@ -217,9 +222,8 @@ int main () {
 	hugeint ans = example.getResult();
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer:" << std::endl;
-	std::cout << "Hexadecimal: " << ans.toHex() << std::endl;
-	std::cout << "Decimal:     " << ans.toDec() << std::endl;
-	std::cout << "Octal:       " << ans.toOct() << std::endl;
-	std::cout << "Binary:      " << ans.toBin() << std::endl;
-	std::cout << "Output time (s):" << global.reset() << std::endl;
+	std::cout << "Hexadecimal: " << ans.toHex() << " done in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Decimal:     " << ans.toDec() << " done in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Octal:       " << ans.toOct() << " done in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Binary:      " << ans.toBin() << " done in " << global.reset() << " seconds" << std::endl;
 }
