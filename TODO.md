@@ -8,9 +8,10 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 ### features:
 
-- [ ] repait octa output
+- [x] repair octa output
 - [x] redo example
 - [ ] add ' inside number reading
+- [ ] add index for broken character for "fromString"
 - [ ] make the library header-only
 - [ ] add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
 - [ ] implement nth root

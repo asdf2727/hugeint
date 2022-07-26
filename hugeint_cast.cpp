@@ -240,7 +240,7 @@ std::string hugeint::toOct () const {
 	bool first0 = true;
 	std::string ans = (neg ? "-0" : "0");
 	ullint form = 0;
-	int count = -(((bits.size() - 1) % 3) + 1);
+	int count = bits.size() % 3 - 3;
 	uint to_push;
 	std::size_t index = bits.size() - 1;
 	while (true) {
