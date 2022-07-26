@@ -402,3 +402,7 @@ hugeint hugeint::calculateModPow (ullint exponent, const hugeint &to_div) {
 	}
 	return *this = result;
 }
+
+hugeint hugeint::calculateRoot (ullint degree) {
+	return 0;
+}

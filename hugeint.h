@@ -113,6 +113,7 @@ private:
 	hugeint calculatePow (ullint exponent);
 	hugeint calculateModPow (ullint exponent, const hugeint &to_div);
 
+	hugeint calculateRoot (ullint degree);
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
 		return lhs.bits == rhs.bits && lhs.neg == rhs.neg;
@@ -473,6 +474,16 @@ public:
 	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent, const hugeint &modulo) {
 		hugeint copy = base;
 		return copy.calculateModPow(exponent, modulo);
+	}
+
+	INTEGER_TEMP hugeint NthRoot (int degree) {
+		return calculateRoot(degree);
+	}
+	INTEGER_TEMP hugeint SquareRoot () {
+		return calculateRoot(2);
+	}
+	INTEGER_TEMP hugeint CubicRoot () {
+		return calculateRoot(3);
 	}
 };
 

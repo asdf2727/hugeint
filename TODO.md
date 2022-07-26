@@ -8,6 +8,9 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 ### features:
 
+- [ ] repait octa output
+- [x] redo example
+- [ ] add ' inside number reading
 - [ ] make the library header-only
 - [ ] add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
 - [ ] implement nth root
@@ -28,7 +31,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 ### to test:
 
-- [ ] all
+- [ ] example (especially both powers and more paranthesis)
 
 ### where to publish:
 
