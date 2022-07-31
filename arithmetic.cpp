@@ -55,13 +55,13 @@ private:
 		return parse != equation.end() && !isOperator() && *parse != '(' && *parse != ')' && *parse != ' ';
 	}
 
-	inline hugeint readNumber () {
+	inline hugeint readNumber (bool &error) {
 		hugeint ans;
 		skipSpaces();
 		if (*parse == '(') {
 			parse++;
-			ans = readNumber();
-			calcAdition(ans);
+			ans = readNumber(error);
+			calcAdition(ans, error);
 			parse++;
 			return ans;
 		}
@@ -72,30 +72,45 @@ private:
 			}
 			int errPos = ans.fromString(start, parse);
 			if (errPos != -1) {
-				// Error handling
+				error = true;
+				parse = start + errPos;
 			}
 			return ans;
 		}
 	}
 
-	void calcPower (hugeint &result) {
+	void calcPower (hugeint &result, bool &error) {
 		hugeint temp;
-		bool willContinue = readOperator(result, 3);
+		bool willContinue = readOperator(result, 3, error);
 #ifdef L_TO_R_POWER
-
 		while (willContinue) {
 			parse++;
-			temp = readNumber();
-			willContinue = readOperator(temp, 3);
+			temp = readNumber(error);
+			if(error) {
+				break;
+			}
+			willContinue = readOperator(temp, 3, error);
+			if(error) {
+				break;
+			}
 			result.pow(temp);
 		}
 #else
 		std::vector <hugeint> numbers;
 		while (willContinue) {
 			parse++;
-			temp = readNumber();
-			willContinue = readOperator(temp, 3);
+			temp = readNumber(error);
+			if (error) {
+				break;
+			}
+			willContinue = readOperator(temp, 3, error);
+			if (error) {
+				break;
+			}
 			numbers.push_back(temp);
+		}
+		if (error) {
+			return;
 		}
 		while (numbers.size() > 1) {
 			numbers[numbers.size() - 2].pow(numbers.back());
@@ -105,10 +120,10 @@ private:
 #endif
 	}
 
-	void calcMultiplication (hugeint &result) {
+	void calcMultiplication (hugeint &result, bool &error) {
 		int type = 0; // 0 - multiplcation, 1 - division, 2 - modulo
 		hugeint temp;
-		bool willContinue = readOperator(result, 2);
+		bool willContinue = readOperator(result, 2, error);
 		while (willContinue) {
 			skipSpaces();
 			if (*parse == '*') {
@@ -125,8 +140,14 @@ private:
 				parse--;
 			}
 			parse++;
-			temp = readNumber();
-			willContinue = readOperator(temp, 2);
+			temp = readNumber(error);
+			if (error) {
+				break;
+			}
+			willContinue = readOperator(temp, 2, error);
+			if (error) {
+				break;
+			}
 			if (type == 0) {
 				result *= temp;
 			}
@@ -139,10 +160,10 @@ private:
 		}
 	}
 
-	void calcAdition (hugeint &result) {
+	void calcAdition (hugeint &result, bool &error) {
 		int type = 0; // 0 - adition, 1 - subtraction
 		hugeint temp;
-		bool willContinue = readOperator(result, 1);
+		bool willContinue = readOperator(result, 1, error);
 		while (willContinue) {
 			skipSpaces();
 			if (*parse == '+') {
@@ -152,8 +173,14 @@ private:
 				type = 1;
 			}
 			parse++;
-			temp = readNumber();
-			willContinue = readOperator(temp, 1);
+			temp = readNumber(error);
+			if (error) {
+				break;
+			}
+			willContinue = readOperator(temp, 1, error);
+			if (error) {
+				break;
+			}
 			if (type == 0) {
 				result += temp;
 			}
@@ -163,7 +190,7 @@ private:
 		}
 	}
 
-	inline bool readOperator (hugeint &number, int order) {
+	inline bool readOperator (hugeint &number, int order, bool &error) {
 		bool modified;
 		skipSpaces();
 
@@ -174,19 +201,24 @@ private:
 				break;
 			}
 			else if ((*parse == '+' || *parse == '-') && order < 1) {
-				calcAdition(number);
+				calcAdition(number, error);
 				modified = true;
 			}
 			else if (*parse == '^' && order < 3) {
-				calcPower(number);
+				calcPower(number, error);
 				modified = true;
 			}
 			else if ((!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && order < 2) {
-				calcMultiplication(number);
+				calcMultiplication(number, error);
 				modified = true;
 			}
+			if (error) {
+				break;
+			}
 		} while (modified);
-
+		if (error) {
+			return false;
+		}
 		// Then see if you should continue
 		if (parse == equation.end() || *parse == ')') {
 			return false;
@@ -204,10 +236,15 @@ public:
 	std::string equation;
 
 	hugeint getResult () {
+		bool error = false;
 		parse = equation.begin();
-		peakChar();
-		hugeint result = readNumber();
-		calcAdition(result);
+		hugeint result = readNumber(error);
+		if (!error) {
+			calcAdition(result, error);
+		}
+		if (error || parse != equation.end()) {
+			std::cout << "Unrecognised character \'" << *parse << "\'!\n";
+		}
 		return result;
 	}
 };
@@ -222,8 +259,8 @@ int main () {
 	hugeint ans = example.getResult();
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer:" << std::endl;
-	std::cout << "Hexadecimal: " << ans.toHex() << " done in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Decimal:     " << ans.toDec() << " done in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Octal:       " << ans.toOct() << " done in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Binary:      " << ans.toBin() << " done in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Hexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Decimal:     " << ans.toDec() << " in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Octal:       " << ans.toOct() << " in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Binary:      " << ans.toBin() << " in " << global.reset() << " seconds" << std::endl;
 }

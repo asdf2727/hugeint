@@ -28,10 +28,10 @@ private:
 
 	// Casting functions
 private:
-	int fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	int fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	int fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop);
-	int fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	int fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
+	int fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
+	int fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
+	int fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
 
 public:
 	int fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
