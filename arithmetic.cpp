@@ -266,6 +266,6 @@ int main () {
 	std::cout << "Decimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
 	std::cout << "Octal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
 	std::cout << "Binary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "Square root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "Cubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
+	// std::cout << "Square root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
+	// std::cout << "Cubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
 }

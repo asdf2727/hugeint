@@ -417,13 +417,14 @@ void hugeint::calculatePow (ullint exponent, const hugeint &to_mod) {
 
 hugeint hugeint::calculateSqrRoot () const {
 	hugeint guess = (hugeint)1 << ((size()) >> 1);
-	hugeint copy;
+	hugeint next;
 	while (true) {
-		copy = (guess + *this / guess) >> 1;
-		if (guess == copy || guess == copy - 1 || guess == copy + 1) {
+		next = (guess + *this / guess) >> 1;
+		// std::cout << (next - guess).size() << '\n';
+		if (guess == next || guess == next - 1 || guess == next + 1) {
 			break;
 		}
-		guess = copy;
+		guess = next;
 	}
 	if (guess * guess > *this) {
 		guess--;
@@ -441,13 +442,14 @@ hugeint hugeint::calculateSqrRoot () const {
 }
 hugeint hugeint::calculateNthRoot (ullint degree) const {
 	hugeint guess = (hugeint)1 << ((size() - 1 + degree / 2) / degree);
-	hugeint copy;
+	hugeint next;
 	while (true) {
-		copy = (guess * (degree - 1) + *this / ::pow(guess, degree - 1)) / degree;
-		if (guess == copy || guess == copy - 1 || guess == copy + 1) {
+		next = (guess * (degree - 1) + *this / ::pow(guess, degree - 1)) / degree;
+		// std::cout << (next - guess).size() << '\n';
+		if (guess == next || guess == next - 1 || guess == next + 1) {
 			break;
 		}
-		guess = copy;
+		guess = next;
 	}
 	if (::pow(guess, degree) > *this) {
 		guess--;
