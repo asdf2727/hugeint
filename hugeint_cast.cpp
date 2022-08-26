@@ -3,6 +3,9 @@
 // Internals
 int hugeint::fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
+		if (*pos == '\'') {
+			continue;
+		}
 		if (('0' > *pos || *pos > '9') && ('a' > *pos || *pos > 'f') && ('A' > *pos || *pos > 'F')) {
 			return errPos;
 		}
@@ -13,6 +16,9 @@ int hugeint::fromHex (const std::string::const_iterator &start, const std::strin
 	neg = false;
 	std::string::const_iterator rstop = start - 1;
 	for (std::string::const_iterator pos = stop - 1; pos != rstop; pos--) {
+		if (*pos == '\'') {
+			continue;
+		}
 		if ('0' <= *pos && *pos <= '9') {
 			form |= (*pos - '0') << index;
 		}
@@ -35,6 +41,9 @@ int hugeint::fromHex (const std::string::const_iterator &start, const std::strin
 }
 int hugeint::fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
+		if (*pos == '\'') {
+			continue;
+		}
 		if ('0' > *pos || *pos > '9') {
 			return errPos;
 		}
@@ -42,6 +51,9 @@ int hugeint::fromDec (const std::string::const_iterator &start, const std::strin
 	bits.clear();
 	neg = false;
 	for (std::string::const_iterator pos = start; pos != stop; pos++) {
+		if (*pos == '\'') {
+			continue;
+		}
 		calculateMult(10);
 		calculateAdd(*pos - '0');
 	}
@@ -49,6 +61,9 @@ int hugeint::fromDec (const std::string::const_iterator &start, const std::strin
 }
 int hugeint::fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
+		if (*pos == '\'') {
+			continue;
+		}
 		if ('0' > *pos || *pos > '7') {
 			return errPos;
 		}
@@ -59,6 +74,9 @@ int hugeint::fromOct (const std::string::const_iterator &start, const std::strin
 	neg = false;
 	std::string::const_iterator rstop = start - 1;
 	for (std::string::const_iterator pos = stop - 1; pos != rstop; pos--) {
+		if (*pos == '\'') {
+			continue;
+		}
 		form |= (*pos - '0') << index;
 		index += 3;
 		if (index >= 32) {
@@ -73,6 +91,9 @@ int hugeint::fromOct (const std::string::const_iterator &start, const std::strin
 }
 int hugeint::fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
+		if (*pos == '\'') {
+			continue;
+		}
 		if (*pos != '0' && *pos != '1') {
 			return errPos;
 		}
@@ -83,6 +104,9 @@ int hugeint::fromBin (const std::string::const_iterator &start, const std::strin
 	neg = false;
 	std::string::const_iterator rstop = start - 1;
 	for (std::string::const_iterator pos = stop - 1; pos != rstop; pos--) {
+		if (*pos == '\'') {
+			continue;
+		}
 		form |= (*pos - '0') << index;
 		index += 1;
 		if (index >= 32) {
@@ -451,11 +475,7 @@ hugeint::operator unsigned long long int () const {
 	return (bits.empty() ? 0 : (neg ? -bits[0] : bits[0]) + (bits.size() < 2 ? 0 : (neg ? -(llint)bits[1] : (llint)bits[1]) << 32));
 }
 hugeint::operator const char * () const {
-#ifdef HUGEINT_DECIMAL_OUTPUT
 	return toDec().c_str();
-#else
-	return toHex().c_str();
-#endif
 }
 
 hugeint &hugeint::operator= (hugeint &&to_copy) noexcept {

@@ -1,8 +1,8 @@
 #include "hugeint.h"
 
-// Internals
+// Intermideats
 
-// Size also works as log2 (gives the biggest bit 1)
+// Size also works as log2 + 1 (gives the number of binary digits, for example 7 for 64, etc.)
 unsigned long long int hugeint::size () const {
 	ullint size = bits.size() << 5;
 	for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
@@ -60,7 +60,7 @@ void hugeint::decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2) {
 		nr1[index] = rez;
 	}
 }
-std::deque <unsigned int> hugeint::karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size) {
+std::deque <unsigned int> hugeint::Karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size) {
 	if (tot_size <= 1) {
 		half11.push_back(((ullint)half11[0] * half21[0]) >> 32);
 		half11[0] *= half21[0];
@@ -76,11 +76,11 @@ std::deque <unsigned int> hugeint::karatsuba (std::deque <uint> half11, std::deq
 		tot_size >>= 1;
 		half11.resize(tot_size);
 		half21.resize(tot_size);
-		calc1 = karatsuba(half11, half21, tot_size);
-		calc2 = karatsuba(half12, half22, tot_size);
+		calc1 = Karatsuba(half11, half21, tot_size);
+		calc2 = Karatsuba(half12, half22, tot_size);
 		add1 = addDeque(half11, half12, false);
 		add2 = addDeque(half21, half22, false);
-		calc3 = karatsuba(half11, half21, tot_size);
+		calc3 = Karatsuba(half11, half21, tot_size);
 		if (add1) {
 			for (std::size_t index = 0; index < tot_size; index++) {
 				half21.push_front(0);
@@ -129,7 +129,7 @@ unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
 	return calc;
 }
 
-// Publics
+// Used by publics
 bool hugeint::compareSml (const hugeint &to_comp) const {
 	if (neg != to_comp.neg) {
 		return neg;
@@ -315,7 +315,7 @@ hugeint &hugeint::calculateMult (const hugeint &to_mult) {
 	for (max_size = 1; max_size < std::max(num1.size(), num2.size()); max_size <<= 1);
 	num1.resize(max_size);
 	num2.resize(max_size);
-	bits = karatsuba(num1, num2, max_size);
+	bits = Karatsuba(num1, num2, max_size);
 	clearZeros();
 	if (is_neg) {
 		negate();
@@ -380,29 +380,84 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	return *this = rest;
 }
 
-hugeint hugeint::calculatePow (ullint exponent) {
-	hugeint result = 1;
-	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
-		if (exponent & bit) {
-			result *= *this;
-		}
-		*this *= *this;
+void hugeint::calculatePow (ullint exponent) {
+	while (!(exponent & 1) && exponent) {
+		exponent >>= 1;
+		calculateMult(*this);
 	}
-	return *this = result;
+	hugeint power = *this;
+	exponent >>= 1;
+	while (exponent) {
+		power *= power;
+		if (exponent & 1) {
+			calculateMult(power);
+		}
+		exponent >>= 1;
+	}
 }
-hugeint hugeint::calculateModPow (ullint exponent, const hugeint &to_div) {
-	hugeint result = 1;
-	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
-		if (exponent & bit) {
-			result *= *this;
-			result %= to_div;
-		}
-		*this *= *this;
-		*this %= to_div;
+void hugeint::calculatePow (ullint exponent, const hugeint &to_mod) {
+	while (!(exponent & 1) && exponent) {
+		exponent >>= 1;
+		calculateMult(*this);
 	}
-	return *this = result;
+	hugeint power = *this;
+	exponent >>= 1;
+	while (exponent) {
+		power *= power;
+		power %= to_mod;
+		if (exponent & 1) {
+			calculateMult(power);
+			calculateMod(to_mod);
+		}
+		exponent >>= 1;
+	}
 }
 
-hugeint hugeint::calculateRoot (ullint degree) {
-	return 0;
+hugeint hugeint::calculateSqrRoot () const {
+	hugeint guess = (hugeint)1 << ((size()) >> 1);
+	hugeint copy;
+	while (true) {
+		copy = (guess + *this / guess) >> 1;
+		if (guess == copy || guess == copy - 1 || guess == copy + 1) {
+			break;
+		}
+		guess = copy;
+	}
+	if (guess * guess > *this) {
+		guess--;
+		while (guess * guess > *this) {
+			guess--;
+		}
+	}
+	else {
+		while (guess * guess <= *this) {
+			guess++;
+		}
+		guess--;
+	}
+	return guess;
+}
+hugeint hugeint::calculateNthRoot (ullint degree) const {
+	hugeint guess = (hugeint)1 << ((size() - 1 + degree / 2) / degree);
+	hugeint copy;
+	while (true) {
+		copy = (guess * (degree - 1) + *this / ::pow(guess, degree - 1)) / degree;
+		if (guess == copy || guess == copy - 1 || guess == copy + 1) {
+			break;
+		}
+		guess = copy;
+	}
+	if (::pow(guess, degree) > *this) {
+		guess--;
+		while (::pow(guess, degree) > *this) {
+			guess--;
+		}
+	}
+	else {
+		while (::pow(guess, degree) <= *this) {
+			guess++;
+		}
+		guess--;
+	}
+	return guess;
 }

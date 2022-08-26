@@ -62,7 +62,12 @@ private:
 			parse++;
 			ans = readNumber(error);
 			calcAdition(ans, error);
-			parse++;
+			if (parse == equation.end()) {
+				error = true;
+			}
+			else {
+				parse++;
+			}
 			return ans;
 		}
 		else {
@@ -125,7 +130,6 @@ private:
 		hugeint temp;
 		bool willContinue = readOperator(result, 2, error);
 		while (willContinue) {
-			skipSpaces();
 			if (*parse == '*') {
 				type = 0;
 			}
@@ -165,7 +169,6 @@ private:
 		hugeint temp;
 		bool willContinue = readOperator(result, 1, error);
 		while (willContinue) {
-			skipSpaces();
 			if (*parse == '+') {
 				type = 0;
 			}
@@ -212,10 +215,7 @@ private:
 				calcMultiplication(number, error);
 				modified = true;
 			}
-			if (error) {
-				break;
-			}
-		} while (modified);
+		} while (modified && !error);
 		if (error) {
 			return false;
 		}
@@ -242,8 +242,11 @@ public:
 		if (!error) {
 			calcAdition(result, error);
 		}
-		if (error || parse != equation.end()) {
+		if (parse != equation.end()) {
 			std::cout << "Unrecognised character \'" << *parse << "\'!\n";
+		}
+		else if (error) {
+			std::cout << "Missing closing paranthesis!\n";
 		}
 		return result;
 	}
@@ -259,8 +262,10 @@ int main () {
 	hugeint ans = example.getResult();
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer:" << std::endl;
-	std::cout << "Hexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Decimal:     " << ans.toDec() << " in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Octal:       " << ans.toOct() << " in " << global.reset() << " seconds" << std::endl;
-	std::cout << "Binary:      " << ans.toBin() << " in " << global.reset() << " seconds" << std::endl;
+	std::cout << "Hexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "Decimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "Octal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "Binary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "Square root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "Cubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
 }

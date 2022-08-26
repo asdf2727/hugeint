@@ -7,7 +7,6 @@
 #include <cstring> // memset
 #include <type_traits> // enable_if
 
-#define HUGEINT_DECIMAL_OUTPUT
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
 #define INTEGER_TEMP template <typename Integer, typename Dummy = std::enable_if <std::is_integral <Integer>::value, bool>>
@@ -34,11 +33,16 @@ private:
 	int fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
 
 public:
+	// Reads a string beetwen the two iterators (stop exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
 	int fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
+	// Returns a string in hexadecimal equal to *this.
 	std::string toHex () const;
+	// Returns a string in decimal equal to *this.
 	std::string toDec () const;
+	// Returns a string in octal equal to *this.
 	std::string toOct () const;
+	// Returns a string in binary equal to *this.
 	std::string toBin () const;
 
 	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
@@ -103,17 +107,18 @@ private:
 
 	bool addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast);
 	void decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2);
-	std::deque <uint> karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size);
+	std::deque <uint> Karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size);
 	hugeint &calculateMult (const hugeint &to_mult);
 
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
 	hugeint &calculateDiv (const hugeint &to_div);
 	hugeint &calculateMod (const hugeint &to_div);
 
-	hugeint calculatePow (ullint exponent);
-	hugeint calculateModPow (ullint exponent, const hugeint &to_div);
+	void calculatePow (ullint exponent);
+	void calculatePow (ullint exponent, const hugeint &to_mod);
 
-	hugeint calculateRoot (ullint degree);
+	hugeint calculateSqrRoot () const;
+	hugeint calculateNthRoot (ullint degree) const;
 public:
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
 		return lhs.bits == rhs.bits && lhs.neg == rhs.neg;
@@ -335,6 +340,10 @@ public:
 		return lhs += (NotHugeint)rhs;
 	}
 
+	friend hugeint operator+ (const hugeint &lhs) {
+		return lhs;
+	}
+
 	friend hugeint operator+ (const hugeint &lhs, const hugeint &rhs) {
 		hugeint result = lhs;
 		result.calculateAdd(rhs);
@@ -461,31 +470,52 @@ public:
 		return result;
 	}
 
-	INTEGER_TEMP hugeint pow (Integer exponent) {
-		return calculatePow(exponent);
+	// Turns *this into (*this ^ exponent).
+	INTEGER_TEMP void pow (Integer exponent) {
+		calculatePow(exponent);
 	}
-	INTEGER_TEMP hugeint pow (Integer exponent, const hugeint &modulo) {
-		return calculateModPow(exponent, modulo);
-	}
-	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent) {
-		hugeint copy = base;
-		return copy.calculatePow(exponent);
-	}
-	INTEGER_TEMP friend hugeint pow (hugeint &base, Integer exponent, const hugeint &modulo) {
-		hugeint copy = base;
-		return copy.calculateModPow(exponent, modulo);
+	// Turns *this into (*this ^ exponent % modulo).
+	INTEGER_TEMP void pow (Integer exponent, const hugeint &modulo) {
+		calculatePow(exponent, modulo);
 	}
 
-	INTEGER_TEMP hugeint NthRoot (int degree) {
-		return calculateRoot(degree);
+	// Returns the floor of the square root.
+	hugeint sqrt () const {
+		return calculateSqrRoot();
 	}
-	INTEGER_TEMP hugeint SquareRoot () {
-		return calculateRoot(2);
+	// Returns the floor of the cubic root.
+	hugeint cbrt () const {
+		return calculateNthRoot(3);
 	}
-	INTEGER_TEMP hugeint CubicRoot () {
-		return calculateRoot(3);
+	// Returns the floor of the nth degree root.
+	INTEGER_TEMP hugeint nthrt (Integer degree) const {
+		return calculateNthRoot(degree);
 	}
 };
+
+// Returns base ^ exponent.
+INTEGER_TEMP hugeint pow (hugeint base, Integer exponent) {
+	base.pow(exponent);
+	return base;
+}
+// Returns base ^ exponent % modulo.
+INTEGER_TEMP hugeint pow (hugeint base, Integer exponent, const hugeint &modulo) {
+	base.pow(exponent, modulo);
+	return base;
+}
+
+// Returns the floor of the square root.
+INTEGER_TEMP hugeint sqrt (const hugeint &num) {
+	return num.sqrt();
+}
+// Returns the floor of the cubic root.
+INTEGER_TEMP hugeint cbrt (const hugeint &num) {
+	return num.cbrt();
+}
+// Returns the floor of the nth degree root.
+INTEGER_TEMP hugeint nthrt (const hugeint &num, Integer degree) {
+	return num.nthrt(degree);
+}
 
 #undef INTEGER_TEMP
 #undef NOT_HUGEINT_TEMP
