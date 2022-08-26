@@ -58,7 +58,6 @@ public:
 	hugeint (const usint &to_copy);
 	hugeint (const uint &to_copy);
 	hugeint (const ullint &to_copy);
-	hugeint (const char *to_copy);
 	hugeint (const std::string &to_copy);
 
 	operator bool () const;
@@ -68,7 +67,7 @@ public:
 	operator unsigned short int () const;
 	operator unsigned int () const;
 	operator unsigned long long int () const;
-	operator const char * () const;
+	operator std::string () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
@@ -79,7 +78,6 @@ public:
 	hugeint &operator= (const usint &to_copy);
 	hugeint &operator= (const uint &to_copy);
 	hugeint &operator= (const ullint &to_copy);
-	hugeint &operator= (const char *to_copy);
 	hugeint &operator= (const std::string &to_copy);
 
 	// Mathematical functions

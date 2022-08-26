@@ -443,11 +443,6 @@ hugeint::hugeint (const ullint &to_copy) : bits() {
 		bits.push_back(to_copy >> 32);
 	}
 }
-hugeint::hugeint (const char *to_copy) : bits() {
-	std::string *strForm = new std::string(to_copy);
-	fromString(strForm->begin(), strForm->end());
-	delete (strForm);
-}
 hugeint::hugeint (const std::string &to_copy) : bits() {
 	neg = false;
 	fromString(to_copy.begin(), to_copy.end());
@@ -474,8 +469,8 @@ hugeint::operator unsigned int () const {
 hugeint::operator unsigned long long int () const {
 	return (bits.empty() ? 0 : (neg ? -bits[0] : bits[0]) + (bits.size() < 2 ? 0 : (neg ? -(llint)bits[1] : (llint)bits[1]) << 32));
 }
-hugeint::operator const char * () const {
-	return toDec().c_str();
+hugeint::operator std::string () const {
+	return toDec();
 }
 
 hugeint &hugeint::operator= (hugeint &&to_copy) noexcept {
@@ -543,12 +538,6 @@ hugeint &hugeint::operator= (const ullint &to_copy) {
 	if (to_copy >> 32) {
 		bits.push_back(to_copy >> 32);
 	}
-	return *this;
-}
-hugeint &hugeint::operator= (const char *to_copy) {
-	std::string *strForm = new std::string(to_copy);
-	fromString(strForm->begin(), strForm->end());
-	delete (strForm);
 	return *this;
 }
 hugeint &hugeint::operator= (const std::string &to_copy) {
