@@ -1,6 +1,7 @@
 #include "hugeint.h"
 
 // Internals
+
 int hugeint::fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos) {
 	for (std::string::const_iterator pos = start; pos != stop; pos++, errPos++) {
 		if (*pos == '\'') {
@@ -121,6 +122,7 @@ int hugeint::fromBin (const std::string::const_iterator &start, const std::strin
 }
 
 // Publics
+
 int hugeint::fromString (const std::string::const_iterator &begin, const std::string::const_iterator &end) {
 	bool isNeg = false;
 	int ans = -1;
@@ -130,14 +132,16 @@ int hugeint::fromString (const std::string::const_iterator &begin, const std::st
 		neg = false;
 	}
 	else {
-		if (*start == '-') {
+		while (start != end && (*start == '+' || *start == '-')) {
+			neg ^= (*start == '-');
 			start++;
-			isNeg = true;
 		}
-		stop--;
-		if (*start == '0') {
+		if (start == end) {
+			bits.clear();
+			neg = false;
+		}
+		else if (*start == '0') {
 			start++;
-			stop++;
 			if (*start == 'x' || *start == 'X') {
 				ans = fromHex(++start, stop, 2);
 			}
@@ -152,6 +156,7 @@ int hugeint::fromString (const std::string::const_iterator &begin, const std::st
 			}
 		}
 		else {
+			stop--;
 			if ('0' <= *stop && *stop <= '9') {
 				stop++;
 				ans = fromDec(start, stop, 0);
@@ -166,9 +171,8 @@ int hugeint::fromString (const std::string::const_iterator &begin, const std::st
 				ans = fromBin(start, stop, 0);
 			}
 			else {
-				int errPos = (isNeg ? 1 : 0);
-				for (; start != stop; start++);
-				return errPos;
+				ans = (isNeg ? 1 : 0);
+				for (; start != stop; start++, ans++);
 			}
 		}
 	}

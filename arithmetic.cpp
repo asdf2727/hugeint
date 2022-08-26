@@ -58,6 +58,12 @@ private:
 	inline hugeint readNumber (bool &error) {
 		hugeint ans;
 		skipSpaces();
+		bool neg = false;
+		while (parse != equation.end() && (*parse == '+' || *parse == '-')) {
+			neg ^= (*parse == '-');
+			parse++;
+			skipSpaces();
+		}
 		if (*parse == '(') {
 			parse++;
 			ans = readNumber(error);
@@ -68,7 +74,6 @@ private:
 			else {
 				parse++;
 			}
-			return ans;
 		}
 		else {
 			std::string::const_iterator start = parse;
@@ -80,8 +85,11 @@ private:
 				error = true;
 				parse = start + errPos;
 			}
-			return ans;
 		}
+		if (!error && neg) {
+			ans.negate();
+		}
+		return ans;
 	}
 
 	void calcPower (hugeint &result, bool &error) {
@@ -132,18 +140,19 @@ private:
 		while (willContinue) {
 			if (*parse == '*') {
 				type = 0;
+				parse++;
 			}
 			else if (*parse == '/') {
 				type = 1;
+				parse++;
 			}
 			else if (*parse == '%') {
 				type = 2;
+				parse++;
 			}
 			else {
 				type = 0;
-				parse--;
 			}
-			parse++;
 			temp = readNumber(error);
 			if (error) {
 				break;
@@ -171,11 +180,12 @@ private:
 		while (willContinue) {
 			if (*parse == '+') {
 				type = 0;
+				parse++;
 			}
 			else {
 				type = 1;
+				parse++;
 			}
-			parse++;
 			temp = readNumber(error);
 			if (error) {
 				break;
@@ -193,29 +203,27 @@ private:
 		}
 	}
 
-	inline bool readOperator (hugeint &number, int order, bool &error) {
-		bool modified;
+	inline bool readOperator (hugeint &number, int priority, bool &error) {
 		skipSpaces();
 
-		// Execute while any smaller priority functions can be called
-		do {
-			modified = false;
+		// Execute while any bigger priority functions can be called
+		while (!error) {
 			if (parse == equation.end() || *parse == ')') {
 				break;
 			}
-			else if ((*parse == '+' || *parse == '-') && order < 1) {
+			else if ((*parse == '+' || *parse == '-') && priority < 1) {
 				calcAdition(number, error);
-				modified = true;
 			}
-			else if (*parse == '^' && order < 3) {
+			else if (*parse == '^' && priority < 3) {
 				calcPower(number, error);
-				modified = true;
 			}
-			else if ((!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && order < 2) {
+			else if ((!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && priority < 2) {
 				calcMultiplication(number, error);
-				modified = true;
 			}
-		} while (modified && !error);
+			else {
+				break;
+			}
+		}
 		if (error) {
 			return false;
 		}
@@ -224,13 +232,13 @@ private:
 			return false;
 		}
 		if (*parse == '+' || *parse == '-') {
-			return order == 1;
+			return priority == 1;
 		}
 		if (*parse == '^') {
-			return order == 3;
+			return priority == 3;
 		}
 		// If no other operator was found, try aplying multiplication, maybe without the symbol
-		return order == 2;
+		return priority == 2;
 	}
 public:
 	std::string equation;
@@ -262,10 +270,10 @@ int main () {
 	hugeint ans = example.getResult();
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer:" << std::endl;
-	std::cout << "Hexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "Decimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "Octal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "Binary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
-	// std::cout << "Square root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
-	// std::cout << "Cubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
+	std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+	// std::cout << "\tSquare root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
+	// std::cout << "\tCubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
 }

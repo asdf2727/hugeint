@@ -37,13 +37,13 @@ public:
 	// Reads a string beetwen the two iterators (stop exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
 	int fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
-	// Returns a string in hexadecimal equal to *this.
+	// Returns a string in hexadecimal equal to self.
 	std::string toHex () const;
-	// Returns a string in decimal equal to *this.
+	// Returns a string in decimal equal to self.
 	std::string toDec () const;
-	// Returns a string in octal equal to *this.
+	// Returns a string in octal equal to self.
 	std::string toOct () const;
-	// Returns a string in binary equal to *this.
+	// Returns a string in binary equal to self.
 	std::string toBin () const;
 
 	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
@@ -87,7 +87,6 @@ private:
 	void resize (std::size_t new_size);
 	void clearZeros ();
 	void invert ();
-	void negate ();
 
 	bool compareSml (const hugeint &to_comp) const;
 
@@ -119,6 +118,9 @@ private:
 	hugeint calculateSqrRoot () const;
 	hugeint calculateNthRoot (ullint degree) const;
 public:
+	// Negates self
+	void negate ();
+
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
 		return lhs.bits == rhs.bits && lhs.neg == rhs.neg;
 	}
@@ -469,11 +471,11 @@ public:
 		return result;
 	}
 
-	// Turns *this into (*this ^ exponent).
+	// Turns self into (self ^ exponent).
 	UNSIGNED_TEMP void pow (IntegerU exponent) {
 		calculatePow(exponent);
 	}
-	// Turns *this into (*this ^ exponent % modulo).
+	// Turns self into (self ^ exponent % modulo).
 	UNSIGNED_TEMP void pow (IntegerU exponent, const hugeint &modulo) {
 		calculatePow(exponent, modulo);
 	}
