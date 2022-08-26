@@ -5,7 +5,9 @@
 // Size also works as log2 + 1 (gives the number of binary digits, for example 7 for 64, etc.)
 unsigned long long int hugeint::size () const {
 	ullint size = bits.size() << 5;
-	for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+	if (!bits.empty()) {
+		for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+	}
 	return size;
 }
 void hugeint::resize (std::size_t new_size) {

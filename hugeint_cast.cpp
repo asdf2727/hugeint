@@ -401,25 +401,27 @@ hugeint::hugeint (const bool &to_copy) : bits() {
 	}
 }
 hugeint::hugeint (const sint &to_copy) : bits() {
-	neg = to_copy < 0;
-	if (to_copy) {
-		bits.push_back(to_copy);
+	neg = (to_copy < 0);
+	if (to_copy != (neg ? -1 : 0)) {
+		bits.push_back(*((usint *)&to_copy));
 	}
 }
 hugeint::hugeint (const int &to_copy) : bits() {
-	neg = to_copy < 0;
-	if (to_copy) {
-		bits.push_back(to_copy);
+	neg = (to_copy < 0);
+	if (to_copy != (neg ? -1 : 0)) {
+		bits.push_back(*((uint *)&to_copy));
 	}
+
 }
 hugeint::hugeint (const llint &to_copy) : bits() {
-	neg = to_copy < 0;
-	ullint copy = *((uint *)&to_copy);
-	if (to_copy) {
-		bits.push_back((uint)to_copy);
-	}
-	if (to_copy >> 32) {
-		bits.push_back(to_copy >> 32);
+	neg = (to_copy < 0);
+	if (to_copy != (neg ? -1 : 0)) {
+		ullint copy = *((ullint *)&to_copy);
+		bits.push_back((uint)copy);
+		copy >>= 32;
+		if (copy != (neg ? 0xffffffff : 0)) {
+			bits.push_back((uint)copy);
+		}
 	}
 }
 hugeint::hugeint (const usint &to_copy) : bits() {
@@ -452,13 +454,13 @@ hugeint::operator bool () const {
 	return (!bits.empty() || neg);
 }
 hugeint::operator short int () const {
-	return (bits.empty() ? 0 : (sint)(neg ? -bits[0] : bits[0]));
+	return (bits.empty() ? (neg ? -1 : 0) : (sint)bits[0]);
 }
 hugeint::operator int () const {
-	return (bits.empty() ? 0 : (int)bits[0] * (1 - 2 * neg));
+	return (bits.empty() ? (neg ? -1 : 0) : (int)bits[0]);
 }
 hugeint::operator long long int () const {
-	return (bits.empty() ? 0 : (bits[0] + (bits.size() < 2 ? (neg ? 0xffffffff00000000 : 0) : (llint)bits[1] << 32)) * (1 - 2 * neg));
+	return (bits.empty() ? (neg ? -1 : 0) : bits[0] + (llint)(bits.size() < 2 ? (neg ? -0x7fffffff00000000 : 0) : (ullint)bits[1] << 32));
 }
 hugeint::operator unsigned short int () const {
 	return (bits.empty() ? 0 : (short int)(neg ? -bits[0] : bits[0]));
@@ -489,27 +491,29 @@ hugeint &hugeint::operator= (const bool &to_copy) {
 hugeint &hugeint::operator= (const sint &to_copy) {
 	bits.clear();
 	neg = (to_copy < 0);
-	if (to_copy) {
-		bits.push_back((int)to_copy);
+	if (to_copy != (neg ? -1 : 0)) {
+		bits.push_back(*((usint *)&to_copy));
 	}
 	return *this;
 }
 hugeint &hugeint::operator= (const int &to_copy) {
 	bits.clear();
 	neg = (to_copy < 0);
-	if (to_copy) {
-		bits.push_back(to_copy);
+	if (to_copy != (neg ? -1 : 0)) {
+		bits.push_back(*((uint *)&to_copy));
 	}
 	return *this;
 }
 hugeint &hugeint::operator= (const llint &to_copy) {
 	bits.clear();
 	neg = (to_copy < 0);
-	if (to_copy) {
-		bits.push_back((uint)to_copy);
-	}
-	if (to_copy >> 32) {
-		bits.push_back(to_copy >> 32);
+	if (to_copy != (neg ? -1 : 0)) {
+		ullint copy = *((ullint *)&to_copy);
+		bits.push_back((uint)copy);
+		copy >>= 32;
+		if (copy != (neg ? 0xffffffff : 0)) {
+			bits.push_back((uint)copy);
+		}
 	}
 	return *this;
 }

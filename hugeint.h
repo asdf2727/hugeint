@@ -10,6 +10,7 @@
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
 #define INTEGER_TEMP template <typename Integer, typename Dummy = std::enable_if <std::is_integral <Integer>::value, bool>>
+#define UNSIGNED_TEMP template <typename IntegerU, typename Dummy = std::enable_if <std::is_unsigned <IntegerU>::value, bool>>
 
 class hugeint {
 	// General declarations
@@ -469,11 +470,11 @@ public:
 	}
 
 	// Turns *this into (*this ^ exponent).
-	INTEGER_TEMP void pow (Integer exponent) {
+	UNSIGNED_TEMP void pow (IntegerU exponent) {
 		calculatePow(exponent);
 	}
 	// Turns *this into (*this ^ exponent % modulo).
-	INTEGER_TEMP void pow (Integer exponent, const hugeint &modulo) {
+	UNSIGNED_TEMP void pow (IntegerU exponent, const hugeint &modulo) {
 		calculatePow(exponent, modulo);
 	}
 
@@ -486,34 +487,35 @@ public:
 		return calculateNthRoot(3);
 	}
 	// Returns the floor of the nth degree root.
-	INTEGER_TEMP hugeint nthrt (Integer degree) const {
+	UNSIGNED_TEMP hugeint nthrt (IntegerU degree) const {
 		return calculateNthRoot(degree);
 	}
 };
 
 // Returns base ^ exponent.
-INTEGER_TEMP hugeint pow (hugeint base, Integer exponent) {
+UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent) {
 	base.pow(exponent);
 	return base;
 }
 // Returns base ^ exponent % modulo.
-INTEGER_TEMP hugeint pow (hugeint base, Integer exponent, const hugeint &modulo) {
+UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent, const hugeint &modulo) {
 	base.pow(exponent, modulo);
 	return base;
 }
 
 // Returns the floor of the square root.
-INTEGER_TEMP hugeint sqrt (const hugeint &num) {
+UNSIGNED_TEMP hugeint sqrt (const hugeint &num) {
 	return num.sqrt();
 }
 // Returns the floor of the cubic root.
-INTEGER_TEMP hugeint cbrt (const hugeint &num) {
+UNSIGNED_TEMP hugeint cbrt (const hugeint &num) {
 	return num.cbrt();
 }
 // Returns the floor of the nth degree root.
-INTEGER_TEMP hugeint nthrt (const hugeint &num, Integer degree) {
+UNSIGNED_TEMP hugeint nthrt (const hugeint &num, IntegerU degree) {
 	return num.nthrt(degree);
 }
 
+#undef UNSIGNED_TEMP
 #undef INTEGER_TEMP
 #undef NOT_HUGEINT_TEMP
