@@ -28,14 +28,14 @@ private:
 
 	// Casting functions
 private:
-	int fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
-	int fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
-	int fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
-	int fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, int errPos);
+	void fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
+	void fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
+	void fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
+	void fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
 
 public:
 	// Reads a string beetwen the two iterators (stop exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
-	int fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	size_t fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
 
 	// Returns a string in hexadecimal equal to self.
 	std::string toHex () const;
