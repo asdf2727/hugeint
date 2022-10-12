@@ -15,10 +15,11 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [ ] make the library header-only
 - [x] add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
 - [x] implement nth root
-- [ ] implement abs
+- [x] implement abs
 - [ ] implement gcd and lcm
 - [ ] implement extended euclidean algorithm
 - [ ] implement random
+- [ ] include parser in a separate class or in the same class
 
 ### faster algorithms:
 

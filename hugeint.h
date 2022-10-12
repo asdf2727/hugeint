@@ -471,6 +471,16 @@ public:
 		return result;
 	}
 
+	hugeint abs () {
+		if (neg) {
+			negate();
+		}
+		return *this;
+	}
+	friend hugeint abs (hugeint to_abs) {
+		return to_abs.abs();
+	}
+
 	// Turns self into (self ^ exponent).
 	UNSIGNED_TEMP void pow (IntegerU exponent) {
 		calculatePow(exponent);
@@ -493,6 +503,7 @@ public:
 		return calculateNthRoot(degree);
 	}
 };
+
 
 // Returns base ^ exponent.
 UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent) {

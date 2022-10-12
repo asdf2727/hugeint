@@ -5,7 +5,7 @@
 
 #include "hugeint.h"
 
-//#define L_TO_R_POWER
+#define L_TO_R_POWER
 
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
@@ -27,14 +27,13 @@ private:
 	std::string::const_iterator parse;
 	const char operators[6] = { '+', '-', '*', '/', '%', '^' };
 
+	int errorID;
+	std::string message;
+
 	void skipSpaces () {
 		while (*parse == ' ' && parse != equation.end()) {
 			parse++;
 		}
-	}
-	char peakChar () {
-		skipSpaces();
-		return *parse;
 	}
 	char getChar () {
 		skipSpaces();
@@ -50,185 +49,142 @@ private:
 		}
 		return false;
 	}
-
-	bool isValid () {
-		return parse != equation.end() && !isOperator() && *parse != '(' && *parse != ')' && *parse != ' ';
+	bool isSpecial () {
+		return parse == equation.end() || isOperator() || *parse == '(' || *parse == ')' || *parse == ' ' || *parse == ',';
 	}
 
-	inline hugeint readNumber (bool &error) {
+	hugeint calcNumber () {
 		hugeint ans;
-		skipSpaces();
 		bool neg = false;
+		skipSpaces();
 		while (parse != equation.end() && (*parse == '+' || *parse == '-')) {
 			neg ^= (*parse == '-');
 			parse++;
 			skipSpaces();
 		}
-		if (*parse == '(') {
-			parse++;
-			ans = readNumber(error);
-			calcAdition(ans, error);
-			if (parse == equation.end()) {
-				error = true;
-			}
-			else {
-				parse++;
-			}
-		}
-		else {
+
+		if ('0' <= *parse && *parse <= '9') {
 			std::string::const_iterator start = parse;
-			while (parse != equation.end() && isValid()) {
+			while (!isSpecial()) {
 				parse++;
 			}
 			int errPos = ans.fromString(start, parse);
 			if (errPos != -1) {
-				error = true;
-				parse = start + errPos;
+				errorID = 1;
+				message = "Unrecognised character \'";
+				message += *(start + errPos);
+				message += "\' found in number";
+				return 0;
 			}
 		}
-		if (!error && neg) {
+		else {
+			std::string func;
+			std::vector <hugeint> params;
+			while ('a' <= *parse && *parse <= 'z') {
+				func += *parse;
+				parse++;
+			}
+
+			if (*parse != '(') {
+				errorID = 2;
+				message = "Expected opening paranthesis for function \'" + func + "\'";
+				return 0;
+			}
+			parse++;
+			params.push_back(calcMember(0));
+			while (*parse == ',') {
+				parse++;
+				params.push_back(calcMember(0));
+			}
+			if (parse == equation.end()) {
+				errorID = 3;
+				message = "Expected closing paranthesis for function \'" + func + "\'";
+				return 0;
+			}
+			parse++;
+
+			if (func == "abs") {
+				if (params.size() != 1) {
+					errorID = 4;
+					message = "Function \'abs\' only accepts one parameter";
+					return 0;
+				}
+				ans = abs(params[0]);
+			}
+			else if (func == "pow") {
+				if (params.size() != 2) {
+					errorID = 4;
+					message = "Function \'pow\' only accepts two parameters";
+					return 0;
+				}
+				ans = pow(params[0], params[1]);
+			}
+			else if (func == "sqrt") {
+				if (params.size() != 1) {
+					errorID = 4;
+					message = "Function \'sqrt\' only accepts one parameter";
+					return 0;
+				}
+				ans = abs(params[0]);
+			}
+			else if (func == "cbrt") {
+				if (params.size() != 1) {
+					errorID = 4;
+					message = "Function \'cbrt\' only accepts one parameter";
+					return 0;
+				}
+				ans = abs(params[0]);
+			}
+			else if (func == "nthroot") {
+				if (params.size() != 2) {
+					errorID = 4;
+					message = "Function \'nthroot\' only accepts 2 parameters";
+					return 0;
+				}
+				ans = nthrt(params[0], params[1]);
+			}
+			else if (func == "") {
+				if (params.size() != 1) {
+					errorID = 5;
+					message = "Invalid use of \',\' in paranthesis";
+					return 0;
+				}
+				ans = params[0];
+			}
+			else {
+				errorID = 6;
+				message = "Unrecognised function \'" + func + "\'";
+				return 0;
+			}
+
+		}
+
+		if (!errorID && neg) {
 			ans.negate();
 		}
+
 		return ans;
 	}
 
-	void calcPower (hugeint &result, bool &error) {
-		hugeint temp;
-		bool willContinue = readOperator(result, 3, error);
-#ifdef L_TO_R_POWER
-		while (willContinue) {
-			parse++;
-			temp = readNumber(error);
-			if(error) {
-				break;
-			}
-			willContinue = readOperator(temp, 3, error);
-			if(error) {
-				break;
-			}
-			result.pow(temp);
-		}
-#else
-		std::vector <hugeint> numbers;
-		while (willContinue) {
-			parse++;
-			temp = readNumber(error);
-			if (error) {
-				break;
-			}
-			willContinue = readOperator(temp, 3, error);
-			if (error) {
-				break;
-			}
-			numbers.push_back(temp);
-		}
-		if (error) {
-			return;
-		}
-		while (numbers.size() > 1) {
-			numbers[numbers.size() - 2].pow(numbers.back());
-			numbers.pop_back();
-		}
-		result.pow(numbers[0]);
-#endif
-	}
-
-	void calcMultiplication (hugeint &result, bool &error) {
-		int type = 0; // 0 - multiplcation, 1 - division, 2 - modulo
-		hugeint temp;
-		bool willContinue = readOperator(result, 2, error);
-		while (willContinue) {
-			if (*parse == '*') {
-				type = 0;
-				parse++;
-			}
-			else if (*parse == '/') {
-				type = 1;
-				parse++;
-			}
-			else if (*parse == '%') {
-				type = 2;
-				parse++;
-			}
-			else {
-				type = 0;
-			}
-			temp = readNumber(error);
-			if (error) {
-				break;
-			}
-			willContinue = readOperator(temp, 2, error);
-			if (error) {
-				break;
-			}
-			if (type == 0) {
-				result *= temp;
-			}
-			else if (type == 1) {
-				result /= temp;
-			}
-			else {
-				result %= temp;
-			}
-		}
-	}
-
-	void calcAdition (hugeint &result, bool &error) {
-		int type = 0; // 0 - adition, 1 - subtraction
-		hugeint temp;
-		bool willContinue = readOperator(result, 1, error);
-		while (willContinue) {
-			if (*parse == '+') {
-				type = 0;
-				parse++;
-			}
-			else {
-				type = 1;
-				parse++;
-			}
-			temp = readNumber(error);
-			if (error) {
-				break;
-			}
-			willContinue = readOperator(temp, 1, error);
-			if (error) {
-				break;
-			}
-			if (type == 0) {
-				result += temp;
-			}
-			else {
-				result -= temp;
-			}
-		}
-	}
-
-	inline bool readOperator (hugeint &number, int priority, bool &error) {
+	hugeint calcMember (int priority) {
+		hugeint member = calcNumber();
 		skipSpaces();
 
-		// Execute while any bigger priority functions can be called
-		while (!error) {
-			if (parse == equation.end() || *parse == ')') {
-				break;
-			}
-			else if ((*parse == '+' || *parse == '-') && priority < 1) {
-				calcAdition(number, error);
-			}
-			else if (*parse == '^' && priority < 3) {
-				calcPower(number, error);
-			}
-			else if ((!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && priority < 2) {
-				calcMultiplication(number, error);
-			}
-			else {
-				break;
-			}
+		if (parse != equation.end() && *parse == '^' && priority < 3) {
+			calcPower(member);
 		}
-		if (error) {
-			return false;
+		if (parse != equation.end() && (!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && priority < 2) {
+			calcMultiplication(member);
 		}
-		// Then see if you should continue
-		if (parse == equation.end() || *parse == ')') {
+		if (parse != equation.end() && (*parse == '+' || *parse == '-') && priority < 1) {
+			calcAdition(member);
+		}
+
+		return member;
+	}
+	inline bool readOperator (int priority) {
+		skipSpaces();
+		if (parse == equation.end() || *parse == ')' || *parse == ',') {
 			return false;
 		}
 		if (*parse == '+' || *parse == '-') {
@@ -240,21 +196,74 @@ private:
 		// If no other operator was found, try aplying multiplication, maybe without the symbol
 		return priority == 2;
 	}
+
+	void calcPower (hugeint &ans) {
+#ifdef L_TO_R_POWER
+		while (readOperator(3) && !errorID) {
+			getChar();
+			ans.pow(calcMember(3));
+		}
+#else
+		std::vector <hugeint> numbers;
+		numbers.push_back(ans);
+		while (readOperator(3) && !errorID) {
+			getChar();
+			numbers.push_back(calcMember(3));
+		}
+		if(errorID) {
+			break;
+		}
+		while (numbers.size() >= 1) {
+			numbers[numbers.size() - 2].pow(numbers.back());
+			numbers.pop_back();
+		}
+#endif
+	}
+
+	void calcMultiplication (hugeint &ans) {
+		while (readOperator(2) && !errorID) {
+			skipSpaces();
+			if (*parse == '*') {
+				parse++;
+				ans *= calcMember(3);
+			}
+			else if (*parse == '/') {
+				parse++;
+				ans /= calcMember(3);
+			}
+			else if (*parse == '%') {
+				parse++;
+				ans %= calcMember(3);
+			}
+			else {
+				ans *= calcMember(3);
+			}
+		}
+	}
+	void calcAdition (hugeint &ans) {
+		while (readOperator(1) && !errorID) {
+			skipSpaces();
+			if (*parse == '+') {
+				parse++;
+				ans += calcMember(1);
+			}
+			else {
+				parse++;
+				ans -= calcMember(1);
+			}
+		}
+	}
 public:
 	std::string equation;
+	hugeint result;
 
 	hugeint getResult () {
-		bool error = false;
+		errorID = 0;
+		message = "";
 		parse = equation.begin();
-		hugeint result = readNumber(error);
-		if (!error) {
-			calcAdition(result, error);
-		}
-		if (parse != equation.end()) {
-			std::cout << "Unrecognised character \'" << *parse << "\'!\n";
-		}
-		else if (error) {
-			std::cout << "Missing closing paranthesis!\n";
+		result = calcMember(0);
+		if (errorID) {
+			std::cout << '#' << errorID << ": " << message << '\n';
 		}
 		return result;
 	}
@@ -274,6 +283,4 @@ int main () {
 	std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
 	std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
 	std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
-	// std::cout << "\tSquare root: " << ans.sqrt() << " in " << global.reset() << " seconds." << std::endl;
-	// std::cout << "\tCubic root:  " << ans.cbrt() << " in " << global.reset() << " seconds." << std::endl;
 }

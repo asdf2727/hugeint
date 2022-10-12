@@ -33,7 +33,6 @@ void hugeint::negate () {
 	neg = !neg;
 	invert();
 	increment();
-	clearZeros();
 }
 
 // Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
@@ -420,7 +419,7 @@ hugeint hugeint::calculateSqrRoot () const {
 	hugeint next;
 	while (true) {
 		next = (guess + *this / guess) >> 1;
-		// std::cout << (next - guess).size() << '\n';
+		//std::cout << (next - guess).size() << '\n';
 		if (guess == next || guess == next - 1 || guess == next + 1) {
 			break;
 		}
@@ -445,7 +444,7 @@ hugeint hugeint::calculateNthRoot (ullint degree) const {
 	hugeint next;
 	while (true) {
 		next = (guess * (degree - 1) + *this / ::pow(guess, degree - 1)) / degree;
-		// std::cout << (next - guess).size() << '\n';
+		//std::cout << (next - guess).size() << '\n';
 		if (guess == next || guess == next - 1 || guess == next + 1) {
 			break;
 		}
