@@ -21,6 +21,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [ ] implement random
 - [ ] include parser in a separate class or in the same class
 - [ ] add float and double to casting
+- [ ] add throw to div if you divide by 0
 
 ### faster algorithms:
 
@@ -36,7 +37,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 ### to test:
 
 - [x] test index for broken character in "fromString"
-- [ ] example (especially both powers and more paranthesis)
+- [ ] example (all)
 
 ### where to publish:
 
