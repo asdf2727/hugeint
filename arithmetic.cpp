@@ -5,7 +5,7 @@
 
 #include "hugeint.h"
 
-#define L_TO_R_POWER
+//#define L_TO_R_POWER
 
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
@@ -125,7 +125,7 @@ private:
 					message = "Function \'sqrt\' only accepts one parameter";
 					return 0;
 				}
-				ans = abs(params[0]);
+				ans = sqrt(params[0]);
 			}
 			else if (func == "cbrt") {
 				if (params.size() != 1) {
@@ -133,7 +133,7 @@ private:
 					message = "Function \'cbrt\' only accepts one parameter";
 					return 0;
 				}
-				ans = abs(params[0]);
+				ans = cbrt(params[0]);
 			}
 			else if (func == "nthroot") {
 				if (params.size() != 2) {
@@ -141,7 +141,7 @@ private:
 					message = "Function \'nthroot\' only accepts 2 parameters";
 					return 0;
 				}
-				ans = nthrt(params[0], params[1]);
+				ans = nthroot(params[0], params[1]);
 			}
 			else if (func == "") {
 				if (params.size() != 1) {
@@ -210,13 +210,14 @@ private:
 			getChar();
 			numbers.push_back(calcMember(3));
 		}
-		if(errorID) {
-			break;
+		if (errorID) {
+			return;
 		}
-		while (numbers.size() >= 1) {
+		while (numbers.size() > 1) {
 			numbers[numbers.size() - 2].pow(numbers.back());
 			numbers.pop_back();
 		}
+		ans = numbers[0];
 #endif
 	}
 

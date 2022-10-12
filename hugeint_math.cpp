@@ -2,9 +2,9 @@
 
 // Intermideats
 
-// Size also works as log2 + 1 (gives the number of binary digits, for example 7 for 64, etc.)
+// Size also works as log2 (gives the number of binary digits after the most significant bit of 1, for example 64.size() = 6, etc.)
 unsigned long long int hugeint::size () const {
-	ullint size = bits.size() << 5;
+	ullint size = (bits.size() << 5) - 1;
 	if (!bits.empty()) {
 		for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
 	}
@@ -33,6 +33,21 @@ void hugeint::negate () {
 	neg = !neg;
 	invert();
 	increment();
+}
+
+bool hugeint::getBit (size_t pos) const {
+	return (pos >> 5 < bits.size() ? (bits[pos >> 5] >> (pos & 31)) & 1 : neg);
+}
+void hugeint::flipBit (size_t pos) {
+	while (bits.size() <= pos >> 5) {
+		bits.push_back(neg ? 0xffffffff : 0);
+	}
+	bits[pos >> 5] ^= 1 << (pos & 31);
+}
+void hugeint::setBit (size_t pos, bool val) {
+	if (val ^ getBit(pos)) {
+		flipBit(pos);
+	}
 }
 
 // Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
@@ -415,52 +430,22 @@ void hugeint::calculatePow (ullint exponent, const hugeint &to_mod) {
 }
 
 hugeint hugeint::calculateSqrRoot () const {
-	hugeint guess = (hugeint)1 << ((size()) >> 1);
-	hugeint next;
-	while (true) {
-		next = (guess + *this / guess) >> 1;
-		//std::cout << (next - guess).size() << '\n';
-		if (guess == next || guess == next - 1 || guess == next + 1) {
-			break;
-		}
-		guess = next;
-	}
-	if (guess * guess > *this) {
-		guess--;
-		while (guess * guess > *this) {
-			guess--;
+	hugeint ans;
+	for (size_t pos = size() >> 1; pos <= size() >> 1; pos--) {
+		ans.flipBit(pos);
+		if (ans * ans > *this) {
+			ans.flipBit(pos);
 		}
 	}
-	else {
-		while (guess * guess <= *this) {
-			guess++;
-		}
-		guess--;
-	}
-	return guess;
+	return ans;
 }
 hugeint hugeint::calculateNthRoot (ullint degree) const {
-	hugeint guess = (hugeint)1 << ((size() - 1 + degree / 2) / degree);
-	hugeint next;
-	while (true) {
-		next = (guess * (degree - 1) + *this / ::pow(guess, degree - 1)) / degree;
-		//std::cout << (next - guess).size() << '\n';
-		if (guess == next || guess == next - 1 || guess == next + 1) {
-			break;
-		}
-		guess = next;
-	}
-	if (::pow(guess, degree) > *this) {
-		guess--;
-		while (::pow(guess, degree) > *this) {
-			guess--;
+	hugeint ans;
+	for (size_t pos = size() / degree; pos <= size() >> 1; pos--) {
+		ans.flipBit(pos);
+		if (::pow(ans, degree) > *this) {
+			ans.flipBit(pos);
 		}
 	}
-	else {
-		while (::pow(guess, degree) <= *this) {
-			guess++;
-		}
-		guess--;
-	}
-	return guess;
+	return ans;
 }

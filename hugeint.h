@@ -88,6 +88,10 @@ private:
 	void clearZeros ();
 	void invert ();
 
+	bool getBit (size_t pos) const;
+	void flipBit (size_t pos);
+	void setBit (size_t pos, bool val);
+
 	bool compareSml (const hugeint &to_comp) const;
 
 	hugeint &calculateAnd (const hugeint &to_and);
@@ -494,16 +498,27 @@ public:
 	hugeint sqrt () const {
 		return calculateSqrRoot();
 	}
+	// Returns the floor of the square root.
+	friend hugeint sqrt (const hugeint &num) {
+		return num.sqrt();
+	}
 	// Returns the floor of the cubic root.
 	hugeint cbrt () const {
 		return calculateNthRoot(3);
 	}
+	// Returns the floor of the cubic root.
+	friend hugeint cbrt (const hugeint &num) {
+		return num.cbrt();
+	}
 	// Returns the floor of the nth degree root.
-	UNSIGNED_TEMP hugeint nthrt (IntegerU degree) const {
+	UNSIGNED_TEMP hugeint nthroot (IntegerU degree) const {
 		return calculateNthRoot(degree);
 	}
+	// Returns the floor of the nth degree root.
+	UNSIGNED_TEMP friend hugeint nthroot (const hugeint &num, IntegerU degree) {
+		return num.nthroot(degree);
+	}
 };
-
 
 // Returns base ^ exponent.
 UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent) {
@@ -514,19 +529,6 @@ UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent) {
 UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent, const hugeint &modulo) {
 	base.pow(exponent, modulo);
 	return base;
-}
-
-// Returns the floor of the square root.
-UNSIGNED_TEMP hugeint sqrt (const hugeint &num) {
-	return num.sqrt();
-}
-// Returns the floor of the cubic root.
-UNSIGNED_TEMP hugeint cbrt (const hugeint &num) {
-	return num.cbrt();
-}
-// Returns the floor of the nth degree root.
-UNSIGNED_TEMP hugeint nthrt (const hugeint &num, IntegerU degree) {
-	return num.nthrt(degree);
 }
 
 #undef UNSIGNED_TEMP
