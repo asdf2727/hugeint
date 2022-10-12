@@ -24,7 +24,7 @@ public:
 
 class calculator {
 private:
-	std::string::const_iterator parse;
+	__gnu_cxx::__normal_iterator <char *, std::basic_string <char>> parse;
 	const char operators[6] = { '+', '-', '*', '/', '%', '^' };
 
 	int error_id;
@@ -53,110 +53,131 @@ private:
 	}
 
 	hugeint calcNumber () {
-		hugeint ans;
+		hugeint ans = 0;
+		int errPos;
 		bool neg = false;
+		std::string::iterator start = parse;
+		std::string str;
+
+		/// Read string
 		while (parse != equation.end() && (*parse == '+' || *parse == '-')) {
 			neg ^= (*parse == '-');
 			nextChar();
 		}
+		while (!isSpecial()) {
+			str.push_back(*parse);
+			parse++;
+		}
 
-		if ('0' <= *parse && *parse <= '9') {
-			std::string::const_iterator start = parse;
-			while (!isSpecial()) {
-				parse++;
+		// Try interpreting as a number
+		if (!str.empty()) {
+			errPos = ans.fromString(str.begin(), str.end());
+			skipSpaces();
+			if (errPos == -1) {
+				if (neg) {
+					ans.negate();
+				}
+				return ans;
 			}
-			int errPos = ans.fromString(start, parse);
-			if (errPos != -1) {
-				error_id = 1;
-				message = "Unrecognised character \'";
-				message += *(start + errPos);
-				message += "\' found in number";
+		}
+
+		/// If it isn't a number, try interpreting as a function or as brackets
+		std::vector <hugeint> params;
+		bool has_brackets = false;
+
+		if (*parse == '(') {
+			has_brackets = true;
+			nextChar();
+			if (*parse != ')') {
+				params.push_back(calcMember(0));
+				while (!error_id && parse != equation.end() && *parse == ',') {
+					nextChar();
+					params.push_back(calcMember(0));
+				}
+				if (error_id) {
+					return 0;
+				}
+			}
+			if (parse == equation.end()) {
+				message = "Expected closing bracket for " + (str.empty() ? "operation" : "function \'" + str + "\'");
+				error_id = 2;
 				return 0;
 			}
-			skipSpaces();
+			if (*parse != ')') {
+				error_id = 1;
+				return 0;
+			}
+			nextChar();
+		}
+
+		if (str.empty()) {
+			if (!has_brackets) {
+				message = "Void numbers are invalid. Try putting \'0\' between operators";
+				error_id = 5;
+				return 0;
+			}
+			if (params.size() > 1) {
+				message = "Invalid use of \',\' inside brackets";
+				error_id = 4;
+				return 0;
+			}
+			ans = params.empty() ? (hugeint)0 : params[0];
+		}
+		else if (str == "abs") {
+			if (params.size() != 1) {
+				message = "Function \'abs\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = abs(params[0]);
+		}
+		else if (str == "pow") {
+			if (params.size() != 2) {
+				message = "Function \'pow\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = pow(params[0], params[1]);
+		}
+		else if (str == "sqrt") {
+			if (params.size() != 1) {
+				message = "Function \'sqrt\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = sqrt(params[0]);
+		}
+		else if (str == "cbrt") {
+			if (params.size() != 1) {
+				message = "Function \'cbrt\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = cbrt(params[0]);
+		}
+		else if (str == "nthroot") {
+			if (params.size() != 2) {
+				message = "Function \'nthroot\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = nthroot(params[0], params[1]);
 		}
 		else {
-			std::string func;
-			std::vector <hugeint> params;
-			while ('a' <= *parse && *parse <= 'z') {
-				func += *parse;
-				parse++;
-			}
-
-			skipSpaces();
-			if (*parse == '(') {
-				nextChar();
-				if (*parse != ')') {
-					params.push_back(calcMember(0));
-					while (parse != equation.end() && *parse == ',') {
-						nextChar();
-						params.push_back(calcMember(0));
-					}
-				}
-				if (parse == equation.end() || *parse != ')') {
-					error_id = 3;
-					message = "Expected closing paranthesis for " + (func.empty() ? "operation" : "function \'" + func + "\'");
-					return 0;
-				}
-				nextChar();
-			}
-
-			if (func == "abs") {
-				if (params.size() != 1) {
-					error_id = 4;
-					message = "Function \'abs\' only accepts one parameter";
-					return 0;
-				}
-				ans = abs(params[0]);
-			}
-			else if (func == "pow") {
-				if (params.size() != 2) {
-					error_id = 4;
-					message = "Function \'pow\' only accepts two parameters";
-					return 0;
-				}
-				ans = pow(params[0], params[1]);
-			}
-			else if (func == "sqrt") {
-				if (params.size() != 1) {
-					error_id = 4;
-					message = "Function \'sqrt\' only accepts one parameter";
-					return 0;
-				}
-				ans = sqrt(params[0]);
-			}
-			else if (func == "cbrt") {
-				if (params.size() != 1) {
-					error_id = 4;
-					message = "Function \'cbrt\' only accepts one parameter";
-					return 0;
-				}
-				ans = cbrt(params[0]);
-			}
-			else if (func == "nthroot") {
-				if (params.size() != 2) {
-					error_id = 4;
-					message = "Function \'nthroot\' only accepts 2 parameters";
-					return 0;
-				}
-				ans = nthroot(params[0], params[1]);
-			}
-			else if (func == "") {
-				if (params.size() != 1) {
-					error_id = 5;
-					message = "Invalid use of \',\' in paranthesis";
-					return 0;
-				}
-				ans = params[0];
+			if (has_brackets) {
+				message = "Unrecognised function \'" + str + "\' found";
+				error_id = 6;
 			}
 			else {
-				error_id = 6;
-				message = "Unrecognised function \'" + func + "\'";
-				return 0;
+				message = "Unrecognised \'";
+				message += *(start + errPos);
+				message += "\' character found";
+				error_id = 1;
 			}
+			return 0;
 		}
 
-		if (!error_id && neg) {
+		if (neg) {
 			ans.negate();
 		}
 
@@ -248,7 +269,17 @@ private:
 		}
 	}
 public:
-	// Error ID count: 9
+	/*
+	Error codes:
+		0 - All clear
+		1 - Unrecognised character
+		2 - expected closing bracket
+		3 - unmached closing bracket
+		4 - invalid ','
+		5 - void numbers invalid
+		6 - invalid function name
+		7 - function only accepts n params
+	*/
 
 	std::string equation;
 	hugeint result;
@@ -260,16 +291,16 @@ public:
 		skipSpaces();
 		result = calcMember(0);
 		if (!error_id && parse != equation.end()) {
-			if (*parse == ',') {
-				error_id = 5;
+			if (*parse == ')') {
+				error_id = 3;
+				message = "Unmatched closing bracket found";
+			}
+			else if (*parse == ',') {
+				error_id = 4;
 				message = "Invalid use of \',\' in operation";
 			}
-			else if (*parse == ')') {
-				error_id = 7;
-				message = "Unexpected paranthesis closing found";
-			}
 			else {
-				error_id = 8;
+				error_id = 1;
 				message = "Unrecognised \'";
 				message += *parse;
 				message += "\' character found";
