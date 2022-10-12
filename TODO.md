@@ -20,6 +20,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [ ] implement extended euclidean algorithm
 - [ ] implement random
 - [ ] include parser in a separate class or in the same class
+- [ ] add float and double to casting
 
 ### faster algorithms:
 

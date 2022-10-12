@@ -156,7 +156,6 @@ private:
 				message = "Unrecognised function \'" + func + "\'";
 				return 0;
 			}
-
 		}
 
 		if (!errorID && neg) {
@@ -258,13 +257,33 @@ public:
 	std::string equation;
 	hugeint result;
 
-	hugeint getResult () {
+	hugeint getResult (std::string &error) {
 		errorID = 0;
 		message = "";
 		parse = equation.begin();
 		result = calcMember(0);
+		if (parse != equation.end()) {
+			if (*parse == ',') {
+				errorID = 5;
+				message = "Invalid use of \',\' in operation";
+			}
+			else if (*parse == ')') {
+				errorID = 7;
+				message = "Unexpected paranthesis closing found";
+			}
+			else {
+				errorID = 8;
+				message = "Unrecognised \'";
+				message += *parse;
+				message += "\' character found";
+			}
+			result = 0;
+		}
 		if (errorID) {
-			std::cout << '#' << errorID << ": " << message << '\n';
+			error = "#" + std::to_string(errorID) + ": " + message;
+		}
+		else {
+			error = "";
 		}
 		return result;
 	}
@@ -272,16 +291,25 @@ public:
 
 int main () {
 	timer global;
-	std::string read;
+	std::string read, get_error;
 	calculator example;
+
 	getline(std::cin, read);
 	example.equation = read;
+
 	global.reset();
-	hugeint ans = example.getResult();
+	hugeint ans = example.getResult(get_error);
+
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
-	std::cout << "Answer:" << std::endl;
-	std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
-	std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+	if (!get_error.empty()) {
+		std::cout << get_error << '\n';
+	}
+	else {
+		std::cout << "Answer:" << std::endl;
+		std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+
+	}
 }
