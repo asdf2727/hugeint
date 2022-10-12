@@ -27,7 +27,7 @@ private:
 	std::string::const_iterator parse;
 	const char operators[6] = { '+', '-', '*', '/', '%', '^' };
 
-	int errorID;
+	int error_id;
 	std::string message;
 
 	void skipSpaces () {
@@ -35,10 +35,9 @@ private:
 			parse++;
 		}
 	}
-	char getChar () {
+	inline void nextChar () {
+		parse++;
 		skipSpaces();
-		char ans = *parse++;
-		return ans;
 	}
 
 	bool isOperator () {
@@ -56,11 +55,9 @@ private:
 	hugeint calcNumber () {
 		hugeint ans;
 		bool neg = false;
-		skipSpaces();
 		while (parse != equation.end() && (*parse == '+' || *parse == '-')) {
 			neg ^= (*parse == '-');
-			parse++;
-			skipSpaces();
+			nextChar();
 		}
 
 		if ('0' <= *parse && *parse <= '9') {
@@ -70,12 +67,13 @@ private:
 			}
 			int errPos = ans.fromString(start, parse);
 			if (errPos != -1) {
-				errorID = 1;
+				error_id = 1;
 				message = "Unrecognised character \'";
 				message += *(start + errPos);
 				message += "\' found in number";
 				return 0;
 			}
+			skipSpaces();
 		}
 		else {
 			std::string func;
@@ -85,27 +83,27 @@ private:
 				parse++;
 			}
 
-			if (*parse != '(') {
-				errorID = 2;
-				message = "Expected opening paranthesis for function \'" + func + "\'";
-				return 0;
+			skipSpaces();
+			if (*parse == '(') {
+				nextChar();
+				if (*parse != ')') {
+					params.push_back(calcMember(0));
+					while (parse != equation.end() && *parse == ',') {
+						nextChar();
+						params.push_back(calcMember(0));
+					}
+				}
+				if (parse == equation.end() || *parse != ')') {
+					error_id = 3;
+					message = "Expected closing paranthesis for " + (func.empty() ? "operation" : "function \'" + func + "\'");
+					return 0;
+				}
+				nextChar();
 			}
-			parse++;
-			params.push_back(calcMember(0));
-			while (*parse == ',') {
-				parse++;
-				params.push_back(calcMember(0));
-			}
-			if (parse == equation.end()) {
-				errorID = 3;
-				message = "Expected closing paranthesis for function \'" + func + "\'";
-				return 0;
-			}
-			parse++;
 
 			if (func == "abs") {
 				if (params.size() != 1) {
-					errorID = 4;
+					error_id = 4;
 					message = "Function \'abs\' only accepts one parameter";
 					return 0;
 				}
@@ -113,7 +111,7 @@ private:
 			}
 			else if (func == "pow") {
 				if (params.size() != 2) {
-					errorID = 4;
+					error_id = 4;
 					message = "Function \'pow\' only accepts two parameters";
 					return 0;
 				}
@@ -121,7 +119,7 @@ private:
 			}
 			else if (func == "sqrt") {
 				if (params.size() != 1) {
-					errorID = 4;
+					error_id = 4;
 					message = "Function \'sqrt\' only accepts one parameter";
 					return 0;
 				}
@@ -129,7 +127,7 @@ private:
 			}
 			else if (func == "cbrt") {
 				if (params.size() != 1) {
-					errorID = 4;
+					error_id = 4;
 					message = "Function \'cbrt\' only accepts one parameter";
 					return 0;
 				}
@@ -137,7 +135,7 @@ private:
 			}
 			else if (func == "nthroot") {
 				if (params.size() != 2) {
-					errorID = 4;
+					error_id = 4;
 					message = "Function \'nthroot\' only accepts 2 parameters";
 					return 0;
 				}
@@ -145,20 +143,20 @@ private:
 			}
 			else if (func == "") {
 				if (params.size() != 1) {
-					errorID = 5;
+					error_id = 5;
 					message = "Invalid use of \',\' in paranthesis";
 					return 0;
 				}
 				ans = params[0];
 			}
 			else {
-				errorID = 6;
+				error_id = 6;
 				message = "Unrecognised function \'" + func + "\'";
 				return 0;
 			}
 		}
 
-		if (!errorID && neg) {
+		if (!error_id && neg) {
 			ans.negate();
 		}
 
@@ -167,7 +165,6 @@ private:
 
 	hugeint calcMember (int priority) {
 		hugeint member = calcNumber();
-		skipSpaces();
 
 		if (parse != equation.end() && *parse == '^' && priority < 3) {
 			calcPower(member);
@@ -182,7 +179,6 @@ private:
 		return member;
 	}
 	inline bool readOperator (int priority) {
-		skipSpaces();
 		if (parse == equation.end() || *parse == ')' || *parse == ',') {
 			return false;
 		}
@@ -198,18 +194,18 @@ private:
 
 	void calcPower (hugeint &ans) {
 #ifdef L_TO_R_POWER
-		while (readOperator(3) && !errorID) {
-			getChar();
+		while (readOperator(3) && !error_id) {
+			nextChar();
 			ans.pow(calcMember(3));
 		}
 #else
 		std::vector <hugeint> numbers;
 		numbers.push_back(ans);
-		while (readOperator(3) && !errorID) {
-			getChar();
+		while (readOperator(3) && !error_id) {
+			nextChar();
 			numbers.push_back(calcMember(3));
 		}
-		if (errorID) {
+		if (error_id) {
 			return;
 		}
 		while (numbers.size() > 1) {
@@ -221,18 +217,17 @@ private:
 	}
 
 	void calcMultiplication (hugeint &ans) {
-		while (readOperator(2) && !errorID) {
-			skipSpaces();
+		while (readOperator(2) && !error_id) {
 			if (*parse == '*') {
-				parse++;
+				nextChar();
 				ans *= calcMember(3);
 			}
 			else if (*parse == '/') {
-				parse++;
+				nextChar();
 				ans /= calcMember(3);
 			}
 			else if (*parse == '%') {
-				parse++;
+				nextChar();
 				ans %= calcMember(3);
 			}
 			else {
@@ -241,46 +236,48 @@ private:
 		}
 	}
 	void calcAdition (hugeint &ans) {
-		while (readOperator(1) && !errorID) {
-			skipSpaces();
+		while (readOperator(1) && !error_id) {
 			if (*parse == '+') {
-				parse++;
+				nextChar();
 				ans += calcMember(1);
 			}
 			else {
-				parse++;
+				nextChar();
 				ans -= calcMember(1);
 			}
 		}
 	}
 public:
+	// Error ID count: 9
+
 	std::string equation;
 	hugeint result;
 
 	hugeint getResult (std::string &error) {
-		errorID = 0;
+		error_id = 0;
 		message = "";
 		parse = equation.begin();
+		skipSpaces();
 		result = calcMember(0);
-		if (parse != equation.end()) {
+		if (!error_id && parse != equation.end()) {
 			if (*parse == ',') {
-				errorID = 5;
+				error_id = 5;
 				message = "Invalid use of \',\' in operation";
 			}
 			else if (*parse == ')') {
-				errorID = 7;
+				error_id = 7;
 				message = "Unexpected paranthesis closing found";
 			}
 			else {
-				errorID = 8;
+				error_id = 8;
 				message = "Unrecognised \'";
 				message += *parse;
 				message += "\' character found";
 			}
 			result = 0;
 		}
-		if (errorID) {
-			error = "#" + std::to_string(errorID) + ": " + message;
+		if (error_id) {
+			error = "#" + std::to_string(error_id) + ": " + message;
 		}
 		else {
 			error = "";
