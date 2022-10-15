@@ -26,10 +26,10 @@ void hugeint::fromHex (const std::string::const_iterator &start, const std::stri
 			form |= (*pos - '0') << index;
 		}
 		else if ('a' <= *pos && *pos <= 'f') {
-			form |= (*pos - 'a' + 10) << index;
+			form |= ((llint)(*pos - 'a' + 10)) << index;
 		}
 		else {
-			form |= (*pos - 'A' + 10) << index;
+			form |= ((llint)(*pos - 'A' + 10)) << index;
 		}
 		index += 4;
 		if (index >= 32) {
@@ -82,7 +82,7 @@ void hugeint::fromOct (const std::string::const_iterator &start, const std::stri
 		if (*pos == '\'') {
 			continue;
 		}
-		form |= (*pos - '0') << index;
+		form |= ((llint)(*pos - '0')) << index;
 		index += 3;
 		if (index >= 32) {
 			index -= 32;
@@ -113,7 +113,7 @@ void hugeint::fromBin (const std::string::const_iterator &start, const std::stri
 		if (*pos == '\'') {
 			continue;
 		}
-		form |= (*pos - '0') << index;
+		form |= ((llint)(*pos - '0')) << index;
 		index += 1;
 		if (index >= 32) {
 			index -= 32;
