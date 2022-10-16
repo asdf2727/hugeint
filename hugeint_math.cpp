@@ -10,19 +10,14 @@ unsigned long long int hugeint::size () const {
 	}
 	return size;
 }
-void hugeint::resize (std::size_t new_size) {
-	std::size_t old_size = bits.size();
-	bits.resize(new_size);
-	if (neg && new_size > old_size) {
-		for (; old_size < new_size; old_size++) {
-			bits[old_size] = 0xffffffff;
-		}
-	}
-}
 void hugeint::clearZeros () {
 	while (!bits.empty() && bits.back() == (neg ? 0xffffffff : 0)) {
 		bits.pop_back();
 	}
+}
+void hugeint::resize (std::size_t new_size) {
+	std::size_t old_size = bits.size();
+	bits.resize(new_size, (neg ? 0xffffffff : 0));
 }
 void hugeint::invert () {
 	for (uint &word : bits) {
@@ -51,84 +46,55 @@ void hugeint::setBit (size_t pos, bool val) {
 }
 
 // Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
-bool hugeint::addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast) {
-	llint rez = 0;
-	for (std::size_t index = 0; index < nr1.size(); index++) {
-		rez += (llint)nr1[index] + (index < nr2.size() ? nr2[index] : 0);
-		nr1[index] = rez;
-		rez >>= 32;
+hugeint hugeint::Karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
+	if (num1.bits.empty() || num2.bits.empty()) {
+		return 0;
 	}
-	if (addlast) {
-		if (rez != 0) {
-			nr1.push_back(1);
-		}
-	}
-	return rez != 0;
-}
-void hugeint::decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2) {
-	llint rez;
-	for (std::size_t index = 0; index < nr2.size(); index++) {
-		rez = (llint)nr1[index] - nr2[index];
-		if (rez < 0) {
-			nr1[index + 1]--;
-			rez += 0x0000000100000000;
-		}
-		nr1[index] = rez;
-	}
-}
-std::deque <unsigned int> hugeint::Karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size) {
 	if (tot_size <= 1) {
-		half11.push_back(((ullint)half11[0] * half21[0]) >> 32);
-		half11[0] *= half21[0];
-		return half11;
+		return (ullint)num1.bits[0] * num2.bits[0];
 	}
-	else {
-		std::deque <uint> half12, half22, calc1, calc2, calc3;
-		bool add1, add2;
-		for (std::size_t index = tot_size >> 1; index < tot_size; index++) {
-			half12.push_back(half11[index]);
-			half22.push_back(half21[index]);
+
+	hugeint high, mid, low;
+	hugeint num1L = num1, num1H;
+	hugeint num2L = num2, num2H;
+	tot_size >>= 1;
+	if (num1.bits.size() > tot_size) {
+		for (std::size_t index = tot_size; index < num1.bits.size(); index++) {
+			num1H.bits.push_back(num1.bits[index]);
 		}
-		tot_size >>= 1;
-		half11.resize(tot_size);
-		half21.resize(tot_size);
-		calc1 = Karatsuba(half11, half21, tot_size);
-		calc2 = Karatsuba(half12, half22, tot_size);
-		add1 = addDeque(half11, half12, false);
-		add2 = addDeque(half21, half22, false);
-		calc3 = Karatsuba(half11, half21, tot_size);
-		if (add1) {
-			for (std::size_t index = 0; index < tot_size; index++) {
-				half21.push_front(0);
-			}
-			addDeque(calc3, half21, true);
-		}
-		if (add2) {
-			for (std::size_t index = 0; index < tot_size; index++) {
-				half11.push_front(0);
-			}
-			addDeque(calc3, half11, true);
-		}
-		if (add1 && add2) {
-			if (calc3.size() < (tot_size << 1) + 1) {
-				calc3.push_back(1);
-			}
-			else {
-				calc3.back()++;
-			}
-		}
-		decDeque(calc3, calc1);
-		decDeque(calc3, calc2);
-		for (std::size_t index = 0; index < tot_size << 1; index++) {
-			calc2.push_front(0);
-		}
-		addDeque(calc2, calc1, false);
-		for (std::size_t index = 0; index < tot_size; index++) {
-			calc3.push_front(0);
-		}
-		addDeque(calc2, calc3, false);
-		return calc2;
+		num1L.resize(tot_size);
+		num1L.clearZeros();
 	}
+	if (num2.bits.size() > tot_size) {
+		for (std::size_t index = tot_size; index < num2.bits.size(); index++) {
+			num2H.bits.push_back(num2.bits[index]);
+		}
+		num2L.resize(tot_size);
+		num2L.clearZeros();
+	}
+	high = doMultAlgorithm(num1H, num2H, tot_size);
+	low = doMultAlgorithm(num1L, num2L, tot_size);
+
+	mid = -high - low;
+	num1L += num1H;
+	num2L += num2H;
+	if (num1L.bits.size() > tot_size) {
+		mid += num2L << (tot_size << 5);
+		num1L.bits.pop_back();
+	}
+	if (num2L.bits.size() > tot_size) {
+		mid += num1L << (tot_size << 5);
+		num2L.bits.pop_back();
+	}
+	mid += doMultAlgorithm(num1L, num2L, tot_size);
+	high <<= tot_size << 5;
+	high += mid;
+	high <<= tot_size << 5;
+	high += low;
+	return high;
+}
+inline hugeint hugeint::doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
+	return Karatsuba(num1, num2, tot_size);
 }
 
 unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
@@ -218,7 +184,9 @@ void hugeint::shiftFwd (ullint val) {
 			bits.pop_back();
 		}
 	}
-	for (uint index = 0; index < digadd; bits.push_front(0), index++);
+	if (!bits.empty()) {
+		for (uint index = 0; index < digadd; bits.push_front(0), index++);
+	}
 }
 void hugeint::shiftBack (ullint val) {
 	uint digdel = val >> 5;
@@ -316,23 +284,21 @@ hugeint &hugeint::calculateMult (const hugeint &to_mult) {
 	if (neg) {
 		negate();
 	}
-	std::deque <uint> num1, num2;
+	const hugeint *calc;
 	int max_size = 0;
-	num1 = bits;
 	if (to_mult.neg) {
 		auto *negated = new hugeint(to_mult);
 		negated->negate();
-		num2 = negated->bits;
-		delete negated;
+		calc = negated;
 	}
 	else {
-		num2 = to_mult.bits;
+		calc = &to_mult;
 	}
-	for (max_size = 1; max_size < std::max(num1.size(), num2.size()); max_size <<= 1);
-	num1.resize(max_size);
-	num2.resize(max_size);
-	bits = Karatsuba(num1, num2, max_size);
-	clearZeros();
+	for (max_size = 1; max_size < std::max(calc->bits.size(), this->bits.size()); max_size <<= 1);
+	*this = doMultAlgorithm(*this, *calc, max_size);
+	if (to_mult.neg) {
+		delete calc;
+	}
 	if (is_neg) {
 		negate();
 	}

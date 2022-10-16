@@ -84,13 +84,16 @@ public:
 	// Mathematical functions
 private:
 	ullint size () const;
-	void resize (std::size_t new_size);
 	void clearZeros ();
+	void resize (std::size_t new_size);
 	void invert ();
 
 	bool getBit (size_t pos) const;
 	void flipBit (size_t pos);
 	void setBit (size_t pos, bool val);
+
+	hugeint Karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
+	inline hugeint doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
 
 	bool compareSml (const hugeint &to_comp) const;
 
@@ -107,9 +110,6 @@ private:
 	hugeint &calculateAdd (const hugeint &to_and);
 	hugeint &calculateDec (const hugeint &to_dec);
 
-	bool addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast);
-	void decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2);
-	std::deque <uint> Karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size);
 	hugeint &calculateMult (const hugeint &to_mult);
 
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
