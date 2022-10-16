@@ -94,8 +94,8 @@ hugeint hugeint::Karatsuba (const hugeint &num1, const hugeint &num2, std::size_
 	return high;
 }
 inline hugeint hugeint::doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
-	while (tot_size >> 1 >= std::max(num1.bits.size(), num2.bits.size())) {
-		tot_size--;
+	while (tot_size && tot_size >> 1 >= std::max(num1.bits.size(), num2.bits.size())) {
+		tot_size <<= 1;
 	}
 	return Karatsuba(num1, num2, tot_size);
 }

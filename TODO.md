@@ -36,8 +36,8 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 ### to test:
 
-- [x] test index for broken character in "fromString"
 - [ ] example (all)
+- [ ] multiplication
 
 ### where to publish:
 
