@@ -92,7 +92,8 @@ private:
 	void flipBit (size_t pos);
 	void setBit (size_t pos, bool val);
 
-	hugeint Karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
+	static hugeint simpleMult (const hugeint &num1, const hugeint &num2);
+	hugeint karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
 	inline hugeint doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
 
 	bool compareSml (const hugeint &to_comp) const;
@@ -486,19 +487,20 @@ public:
 	}
 
 	// Turns self into (self ^ exponent).
-	UNSIGNED_TEMP void pow (IntegerU exponent) {
+	UNSIGNED_TEMP hugeint pow (IntegerU exponent) {
 		calculatePow(exponent);
+		return *this;
 	}
 	// Turns self into (self ^ exponent % modulo).
-	UNSIGNED_TEMP void pow (IntegerU exponent, const hugeint &modulo) {
+	UNSIGNED_TEMP hugeint pow (IntegerU exponent, const hugeint &modulo) {
 		calculatePow(exponent, modulo);
+		return *this;
 	}
 
 	// Returns the floor of the square root.
 	hugeint sqrt () const {
 		return calculateSqrRoot();
 	}
-	// Returns the floor of the square root.
 	friend hugeint sqrt (const hugeint &num) {
 		return num.sqrt();
 	}
@@ -506,7 +508,6 @@ public:
 	hugeint cbrt () const {
 		return calculateNthRoot(3);
 	}
-	// Returns the floor of the cubic root.
 	friend hugeint cbrt (const hugeint &num) {
 		return num.cbrt();
 	}
@@ -514,7 +515,6 @@ public:
 	UNSIGNED_TEMP hugeint nthroot (IntegerU degree) const {
 		return calculateNthRoot(degree);
 	}
-	// Returns the floor of the nth degree root.
 	UNSIGNED_TEMP friend hugeint nthroot (const hugeint &num, IntegerU degree) {
 		return num.nthroot(degree);
 	}

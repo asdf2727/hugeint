@@ -45,15 +45,36 @@ void hugeint::setBit (size_t pos, bool val) {
 	}
 }
 
-// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
-hugeint hugeint::Karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
-	if (num1.bits.empty() || num2.bits.empty()) {
-		return 0;
+hugeint hugeint::simpleMult (const hugeint &num1, const hugeint &num2) {
+	hugeint ans = 0;
+	ullint chunk, over;
+	for (size_t index = num1.bits.size() - 1; index < num1.bits.size(); index--) {
+		chunk = num1.bits[index];
+		if (ans) {
+			ans.bits.push_front(0);
+		}
+		ans.resize(std::max(ans.bits.size(), num2.bits.size() + 1));
+		over = 0;
+		for (size_t index2 = 0; index2 < num2.bits.size(); index2++) {
+			over += chunk * num2.bits[index2] + ans.bits[index2];
+			ans.bits[index2] = (uint)over;
+			over >>= 32;
+		}
+		for (size_t index2 = num2.bits.size(); index2 < ans.bits.size() && over != 0; index2++) {
+			over += ans.bits[index2];
+			ans.bits[index2] = (uint)over;
+			over >>= 32;
+		}
+		while (over) {
+			ans.bits.push_back((uint)over);
+			over >>= 32;
+		}
+		ans.clearZeros();
 	}
-	if (tot_size <= 1) {
-		return (ullint)num1.bits[0] * num2.bits[0];
-	}
-
+	return ans;
+}
+// Explination for the karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+hugeint hugeint::karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
 	hugeint high, mid, low;
 	hugeint num1L = num1, num1H;
 	hugeint num2L = num2, num2H;
@@ -94,10 +115,19 @@ hugeint hugeint::Karatsuba (const hugeint &num1, const hugeint &num2, std::size_
 	return high;
 }
 inline hugeint hugeint::doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
-	while (tot_size && tot_size >> 1 >= std::max(num1.bits.size(), num2.bits.size())) {
-		tot_size <<= 1;
+	if (num1.bits.empty() || num2.bits.empty()) {
+		return 0;
 	}
-	return Karatsuba(num1, num2, tot_size);
+
+	while (tot_size && tot_size >> 1 >= std::max(num1.bits.size(), num2.bits.size())) {
+		tot_size >>= 1;
+	}
+	if (tot_size <= 1) {
+		return (ullint)num1.bits[0] * num2.bits[0];
+	}
+
+	size_t mins = std::min(num1.bits.size(), num2.bits.size()), maxs = std::max(num1.bits.size(), num2.bits.size());
+	return mins * mins < maxs ? simpleMult(num1, num2) : karatsuba(num1, num2, tot_size);
 }
 
 unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {

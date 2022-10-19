@@ -25,12 +25,14 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 ### faster algorithms:
 
+- adition and subtraction
+    - [ ] do a separate function for hugeint + ullint
 - decimal to hex and inverse casting
     - [ ] divide and conquer
 - division
     - [ ] see if there even is an algorithm
 - multiplication
-    - [ ] add simple multiplication for small * big
+    - [x] add simple multiplication for small * big
     - [ ] if you have any sanity left try
       Schonhage-Strassen: https://en.wikipedia.org/wiki/Sch%C3%B6nhage%E2%80%93Strassen_algorithm
 
@@ -38,6 +40,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 
 - [ ] example (all)
 - [ ] multiplication
+- [ ] simple multiplication
 
 ### where to publish:
 

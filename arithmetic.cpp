@@ -241,18 +241,18 @@ private:
 		while (readOperator(2) && !error_id) {
 			if (*parse == '*') {
 				nextChar();
-				ans *= calcMember(3);
+				ans *= calcMember(2);
 			}
 			else if (*parse == '/') {
 				nextChar();
-				ans /= calcMember(3);
+				ans /= calcMember(2);
 			}
 			else if (*parse == '%') {
 				nextChar();
-				ans %= calcMember(3);
+				ans %= calcMember(2);
 			}
 			else {
-				ans *= calcMember(3);
+				ans *= calcMember(2);
 			}
 		}
 	}
