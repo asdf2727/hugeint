@@ -88,10 +88,6 @@ private:
 	void resize (std::size_t new_size);
 	void invert ();
 
-	bool getBit (size_t pos) const;
-	void flipBit (size_t pos);
-	void setBit (size_t pos, bool val);
-
 	static hugeint simpleMult (const hugeint &num1, const hugeint &num2);
 	hugeint karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
 	inline hugeint doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
@@ -125,6 +121,10 @@ private:
 public:
 	// Negates self
 	void negate ();
+	
+	bool getBit (size_t pos) const;
+	void flipBit (size_t pos);
+	void setBit (size_t pos, bool val);
 
 	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
 		return lhs.bits == rhs.bits && lhs.neg == rhs.neg;
