@@ -23,7 +23,7 @@ void hugeint::fromHex (const std::string::const_iterator &start, const std::stri
 			continue;
 		}
 		if ('0' <= *pos && *pos <= '9') {
-			form |= (*pos - '0') << index;
+			form |= ((llint)(*pos - '0')) << index;
 		}
 		else if ('a' <= *pos && *pos <= 'f') {
 			form |= ((llint)(*pos - 'a' + 10)) << index;

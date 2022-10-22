@@ -27,6 +27,6 @@ int main () {
 	for (hugeint val = 2; val <= 500; val++) {
 		ans *= val;
 	}
-	std::cout << ans << '\n';
+	std::cout << ans.toHex() << '\n';
 	std::cout << global.reset();
 }
