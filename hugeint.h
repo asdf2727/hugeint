@@ -6,7 +6,8 @@
 #include <cmath>
 #include <cstring> // memset
 #include <type_traits> // enable_if
-
+#include <random>
+#include <functional>
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
 #define INTEGER_TEMP template <typename Integer, typename Dummy = std::enable_if <std::is_integral <Integer>::value, bool>>
@@ -94,34 +95,37 @@ private:
 
 	bool compareSml (const hugeint &to_comp) const;
 
-	hugeint &calculateAnd (const hugeint &to_and);
-	hugeint &calculateOr (const hugeint &to_or);
-	hugeint &calculateXor (const hugeint &to_xor);
+	void calculateAnd (const hugeint &to_and);
+	void calculateOr (const hugeint &to_or);
+	void calculateXor (const hugeint &to_xor);
 
 	void shiftFwd (ullint val);
 	void shiftBack (ullint val);
 
-	hugeint &increment ();
-	hugeint &decrement ();
+	void increment ();
+	void decrement ();
 
-	hugeint &calculateAdd (const hugeint &to_and);
-	hugeint &calculateDec (const hugeint &to_dec);
+	void calculateAdd (const hugeint &to_and);
+	void calculateDec (const hugeint &to_dec);
 
-	hugeint &calculateMult (const hugeint &to_mult);
+	void calculateMult (const hugeint &to_mult);
 
 	uint divBinSearch (hugeint &rest, const hugeint &to_div);
-	hugeint &calculateDiv (const hugeint &to_div);
-	hugeint &calculateMod (const hugeint &to_div);
+	void calculateDiv (const hugeint &to_div);
+	void calculateMod (const hugeint &to_div);
+
+	void setRamdon (size_t size, bool rand_sign);
+
+	void calculateGcd (hugeint other);
 
 	void calculatePow (ullint exponent);
 	void calculatePow (ullint exponent, const hugeint &to_mod);
 
-	hugeint calculateSqrRoot () const;
 	hugeint calculateNthRoot (ullint degree) const;
 public:
 	// Negates self
 	void negate ();
-	
+
 	bool getBit (size_t pos) const;
 	void flipBit (size_t pos);
 	void setBit (size_t pos, bool val);
@@ -213,10 +217,12 @@ public:
 	}
 
 	friend hugeint &operator&= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateAnd(rhs);
+		lhs.calculateAnd(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator&= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateAnd((hugeint)rhs);
+		lhs.calculateAnd((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator&= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs &= (NotHugeint)rhs;
@@ -239,10 +245,12 @@ public:
 	}
 
 	friend hugeint &operator|= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateOr(rhs);
+		lhs.calculateOr(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator|= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateOr((hugeint)rhs);
+		lhs.calculateOr((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator|= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs |= (NotHugeint)rhs;
@@ -265,10 +273,12 @@ public:
 	}
 
 	friend hugeint &operator^= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateXor(rhs);
+		lhs.calculateXor(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator^= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateXor((hugeint)rhs);
+		lhs.calculateXor((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator^= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs ^= (NotHugeint)rhs;
@@ -320,27 +330,31 @@ public:
 	}
 
 	friend hugeint &operator++ (hugeint &rhs) {
-		return rhs.increment();
+		rhs.increment();
+		return rhs;
 	}
-	friend hugeint operator++ (hugeint &lhs, int) {
+	friend const hugeint operator++ (hugeint &lhs, int) {
 		hugeint sav = lhs;
 		lhs.increment();
 		return sav;
 	}
 	friend hugeint &operator-- (hugeint &rhs) {
-		return rhs.decrement();
+		rhs.decrement();
+		return rhs;
 	}
-	friend hugeint operator-- (hugeint &lhs, int) {
+	friend const hugeint operator-- (hugeint &lhs, int) {
 		hugeint sav = lhs;
 		lhs.decrement();
 		return sav;
 	}
 
 	friend hugeint &operator+= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateAdd(rhs);
+		lhs.calculateAdd(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator+= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateAdd((hugeint)rhs);
+		lhs.calculateAdd((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator+= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs += (NotHugeint)rhs;
@@ -367,10 +381,12 @@ public:
 	}
 
 	friend hugeint &operator-= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateDec(rhs);
+		lhs.calculateDec(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator-= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateDec((hugeint)rhs);
+		lhs.calculateDec((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator-= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs -= (NotHugeint)rhs;
@@ -399,10 +415,12 @@ public:
 	}
 
 	friend hugeint &operator*= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateMult(rhs);
+		lhs.calculateMult(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator*= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateMult((hugeint)rhs);
+		lhs.calculateMult((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator*= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs *= (NotHugeint)rhs;
@@ -425,10 +443,12 @@ public:
 	}
 
 	friend hugeint &operator/= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateDiv(rhs);
+		lhs.calculateDiv(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator/= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateDiv((hugeint)rhs);
+		lhs.calculateDiv((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator/= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs /= (NotHugeint)rhs;
@@ -451,10 +471,12 @@ public:
 	}
 
 	friend hugeint &operator%= (hugeint &lhs, const hugeint &rhs) {
-		return lhs.calculateMod(rhs);
+		lhs.calculateMod(rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend hugeint &operator%= (hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.calculateMod((hugeint)rhs);
+		lhs.calculateMod((hugeint)rhs);
+		return lhs;
 	}
 	NOT_HUGEINT_TEMP friend NotHugeint &operator%= (NotHugeint &lhs, const hugeint &rhs) {
 		return lhs %= (NotHugeint)rhs;
@@ -486,6 +508,27 @@ public:
 		return to_abs.abs();
 	}
 
+	hugeint rand (size_t size, bool rand_sign) {
+		setRamdon(size, rand_sign);
+		return *this;
+	}
+	friend hugeint rand (size_t size, bool rand_sign) {
+		hugeint ans;
+		ans.setRamdon(size, rand_sign);
+		return ans;
+	}
+
+	// Turns self into gcd
+	hugeint gcd (const hugeint &other) {
+		calculateGcd(other);
+		return *this;
+	}
+	friend hugeint gcd (const hugeint &num1, const hugeint &num2) {
+		hugeint ret = num1;
+		ret.calculateGcd(num2);
+		return ret;
+	}
+
 	// Turns self into (self ^ exponent).
 	UNSIGNED_TEMP hugeint pow (IntegerU exponent) {
 		calculatePow(exponent);
@@ -497,21 +540,19 @@ public:
 		return *this;
 	}
 
-	// Returns the floor of the square root.
+	// Returns the floor of the roots.
 	hugeint sqrt () const {
-		return calculateSqrRoot();
+		return calculateNthRoot(2);
 	}
 	friend hugeint sqrt (const hugeint &num) {
 		return num.sqrt();
 	}
-	// Returns the floor of the cubic root.
 	hugeint cbrt () const {
 		return calculateNthRoot(3);
 	}
 	friend hugeint cbrt (const hugeint &num) {
 		return num.cbrt();
 	}
-	// Returns the floor of the nth degree root.
 	UNSIGNED_TEMP hugeint nthroot (IntegerU degree) const {
 		return calculateNthRoot(degree);
 	}

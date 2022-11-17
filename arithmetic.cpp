@@ -111,8 +111,8 @@ private:
 		}
 
 		if (str.empty()) {
-			if (!has_brackets) {
-				message = "Void numbers are invalid. Try putting \'0\' between operators";
+			if (params.size() == 0) {
+				message = "Void numbers are invalid. Try putting \'0\' instead";
 				error_id = 5;
 				return 0;
 			}
@@ -122,6 +122,22 @@ private:
 				return 0;
 			}
 			ans = params.empty() ? (hugeint)0 : params[0];
+		}
+		else if (str == "rand") {
+			if (params.size() > 1) {
+				message = "Function \'rand\' only accepts 0 or 1 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans.rand((params.empty() ? 32 : (size_t)params[0]), false);
+		}
+		else if (str == "gcd") {
+			if (params.size() != 2) {
+				message = "Function \'gcd\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = gcd(params[0], params[1]);
 		}
 		else if (str == "abs") {
 			if (params.size() != 1) {
@@ -171,7 +187,9 @@ private:
 			else {
 				message = "Unrecognised \'";
 				message += *(start + errPos);
-				message += "\' character found";
+				message += "\' character found in word \'";
+				message += str;
+				message += "\'";
 				error_id = 1;
 			}
 			return 0;

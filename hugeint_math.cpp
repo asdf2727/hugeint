@@ -162,7 +162,7 @@ bool hugeint::compareSml (const hugeint &to_comp) const {
 	return false;
 }
 
-hugeint &hugeint::calculateAnd (const hugeint &to_and) {
+void hugeint::calculateAnd (const hugeint &to_and) {
 	if (to_and.bits.size() < bits.size()) {
 		resize(to_and.bits.size());
 	}
@@ -171,9 +171,8 @@ hugeint &hugeint::calculateAnd (const hugeint &to_and) {
 	}
 	neg = neg && to_and.neg;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateOr (const hugeint &to_or) {
+void hugeint::calculateOr (const hugeint &to_or) {
 	if (bits.size() < to_or.bits.size()) {
 		resize(to_or.bits.size());
 	}
@@ -185,9 +184,8 @@ hugeint &hugeint::calculateOr (const hugeint &to_or) {
 	}
 	neg = neg || to_or.neg;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateXor (const hugeint &to_xor) {
+void hugeint::calculateXor (const hugeint &to_xor) {
 	if (bits.size() < to_xor.bits.size()) {
 		resize(to_xor.bits.size());
 	}
@@ -201,12 +199,11 @@ hugeint &hugeint::calculateXor (const hugeint &to_xor) {
 	}
 	neg = neg || to_xor.neg;
 	clearZeros();
-	return *this;
 }
 
 void hugeint::shiftFwd (ullint val) {
 	uint digadd = val >> 5;
-	uint bitshift = val % 32;
+	uint bitshift = val & 0x1f;
 	if (bitshift) {
 		bits.push_back(0);
 		for (std::size_t index = bits.size() - 1; index > 0; index--) {
@@ -223,11 +220,11 @@ void hugeint::shiftFwd (ullint val) {
 }
 void hugeint::shiftBack (ullint val) {
 	uint digdel = val >> 5;
-	uint bitshift = val % 32;
+	uint bitshift = val & 0x1f;
 	for (uint index = 0; !bits.empty() && index < digdel; bits.pop_front(), index++);
 	if (!bits.empty() && bitshift) {
 		for (std::size_t index = 0; index < bits.size() - 1; index++) {
-			bits[index] = (bits[index] >> bitshift) + (bits[index + 1] << (32 - bitshift));
+			bits[index] = (bits[index] >> bitshift) | (bits[index + 1] << (32 - bitshift));
 		}
 		bits.back() = bits.back() >> bitshift;
 		if (bits.back() == 0) {
@@ -236,7 +233,7 @@ void hugeint::shiftBack (ullint val) {
 	}
 }
 
-hugeint &hugeint::increment () {
+void hugeint::increment () {
 	if (neg && bits.empty()) {
 		bits.clear();
 		neg = false;
@@ -256,9 +253,8 @@ hugeint &hugeint::increment () {
 		}
 		clearZeros();
 	}
-	return *this;
 }
-hugeint &hugeint::decrement () {
+void hugeint::decrement () {
 	if (!neg && bits.empty()) {
 		bits.clear();
 		neg = true;
@@ -278,10 +274,9 @@ hugeint &hugeint::decrement () {
 		}
 		clearZeros();
 	}
-	return *this;
 }
 
-hugeint &hugeint::calculateAdd (const hugeint &to_add) {
+void hugeint::calculateAdd (const hugeint &to_add) {
 	ullint sav = 0;
 	resize(std::max(bits.size(), to_add.bits.size()) + 1);
 	for (std::size_t index = 0; index < bits.size(); index++) {
@@ -294,9 +289,8 @@ hugeint &hugeint::calculateAdd (const hugeint &to_add) {
 	}
 	neg = bits.back() & 0x80000000;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateDec (const hugeint &to_dec) {
+void hugeint::calculateDec (const hugeint &to_dec) {
 	ullint sav = 0;
 	resize(std::max(bits.size(), to_dec.bits.size()) + 1);
 	for (std::size_t index = 0; index < bits.size(); index++) {
@@ -309,10 +303,9 @@ hugeint &hugeint::calculateDec (const hugeint &to_dec) {
 	}
 	neg = bits.back() & 0x80000000;
 	clearZeros();
-	return *this;
 }
 
-hugeint &hugeint::calculateMult (const hugeint &to_mult) {
+void hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
 	if (neg) {
 		negate();
@@ -335,10 +328,9 @@ hugeint &hugeint::calculateMult (const hugeint &to_mult) {
 	if (is_neg) {
 		negate();
 	}
-	return *this;
 }
 
-hugeint &hugeint::calculateDiv (const hugeint &to_div) {
+void hugeint::calculateDiv (const hugeint &to_div) {
 	hugeint ans, rest;
 	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
@@ -363,9 +355,9 @@ hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	if (is_neg) {
 		ans.negate();
 	}
-	return *this = ans;
+	*this = ans;
 }
-hugeint &hugeint::calculateMod (const hugeint &to_div) {
+void hugeint::calculateMod (const hugeint &to_div) {
 	hugeint rest;
 	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
@@ -381,9 +373,11 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 		calc = &to_div;
 	}
 	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		rest.bits.push_front(bits[index]);
-		if (*calc <= rest) {
-			divBinSearch(rest, *calc);
+		if (!rest.bits.empty() || bits[index]) {
+			rest.bits.push_front(bits[index]);
+			if (*calc <= rest) {
+				divBinSearch(rest, *calc);
+			}
 		}
 	}
 	if (to_div.neg) {
@@ -392,7 +386,31 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	if (is_neg) {
 		rest.negate();
 	}
-	return *this = rest;
+	*this = rest;
+}
+
+void hugeint::setRamdon (size_t size, bool rand_sign) {
+	std::default_random_engine generator;
+	std::uniform_int_distribution <uint> distribution(0, 0xffffffff);
+	auto randomDigit = std::bind(distribution, generator);
+	neg = rand_sign && (randomDigit() & 1);
+	bits.clear();
+	for (int index = 0; index < size >> 5; index++) {
+		bits.push_back(randomDigit());
+	}
+	if (size & 0x1f) {
+		bits.push_back(randomDigit() & ((1ull << (size & 0x1f)) - 1));
+	}
+	clearZeros();
+}
+
+void hugeint::calculateGcd (hugeint other) {
+	hugeint rest;
+	while (other) {
+		rest = (*this) % other;
+		*this = other;
+		other = rest;
+	}
 }
 
 void hugeint::calculatePow (ullint exponent) {
@@ -428,19 +446,9 @@ void hugeint::calculatePow (ullint exponent, const hugeint &to_mod) {
 	}
 }
 
-hugeint hugeint::calculateSqrRoot () const {
-	hugeint ans;
-	for (size_t pos = size() >> 1; pos <= size() >> 1; pos--) {
-		ans.flipBit(pos);
-		if (ans * ans > *this) {
-			ans.flipBit(pos);
-		}
-	}
-	return ans;
-}
 hugeint hugeint::calculateNthRoot (ullint degree) const {
 	hugeint ans;
-	for (size_t pos = size() / degree; pos <= size() >> 1; pos--) {
+	for (size_t pos = size() / degree; size() / degree; pos--) {
 		ans.flipBit(pos);
 		if (::pow(ans, degree) > *this) {
 			ans.flipBit(pos);
