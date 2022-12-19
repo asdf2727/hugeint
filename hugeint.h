@@ -529,6 +529,22 @@ public:
 		return ret;
 	}
 
+	// Turns self into lcm
+	hugeint lcm (const hugeint &other) {
+		hugeint gcd = *this;
+		gcd.calculateGcd(other);
+		calculateMult(other);
+		calculateDiv(gcd);
+		return *this;
+	}
+	friend hugeint lcm (const hugeint &num1, const hugeint &num2) {
+		hugeint gcd = num1, ret = num1;
+		gcd.calculateGcd(num2);
+		ret.calculateMult(num2);
+		ret.calculateDiv(gcd);
+		return ret;
+	}
+
 	// Turns self into (self ^ exponent).
 	UNSIGNED_TEMP hugeint pow (IntegerU exponent) {
 		calculatePow(exponent);

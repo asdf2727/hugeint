@@ -346,7 +346,9 @@ void hugeint::calculateDiv (const hugeint &to_div) {
 		calc = &to_div;
 	}
 	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		rest.bits.push_front(bits[index]);
+		if (!rest.bits.empty() || bits[index]) {
+			rest.bits.push_front(bits[index]);
+		}
 		ans.bits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
 	}
 	if (to_div.neg) {
