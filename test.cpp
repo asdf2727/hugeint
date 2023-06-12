@@ -29,14 +29,16 @@ public:
 		return ans;
 	}
 
+	void start () {
+		if (!running) {
+			lastStart = std::chrono::steady_clock::now();
+			running = true;
+		}
+	}
 	double stop () {
 		time += since_pause();
 		running = false;
 		return time;
-	}
-	void start () {
-		lastStart = std::chrono::steady_clock::now();
-		running = true;
 	}
 
 	double get () {

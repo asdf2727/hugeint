@@ -12,20 +12,20 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [x] redo example
 - [x] add ' inside number reading
 - [x] add index for broken character for "fromString"
-- [ ] make the library header-only
 - [x] add parsing for string conversion to allow for things like 0x..., b..., x..., etc.
 - [x] implement nth root
 - [x] implement abs
 - [x] implement gcd and lcm
-- [ ] implement extended euclidean algorithm
 - [x] implement random
 - [ ] include parser in a separate class or in the same class
 - [ ] add float and double to casting
 - [ ] add throw to div if you divide by 0
 - [ ] order math functions to have both self modifiers and result
+- [ ] add rbegin instead of wierd for from n-1 to overflow
 
 ### faster algorithms:
 
+- general hardware optimizations
 - adition and subtraction
     - [ ] do a separate function for hugeint + ullint
 - decimal to hex and inverse casting

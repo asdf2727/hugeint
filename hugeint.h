@@ -10,8 +10,7 @@
 #include <functional>
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
-#define INTEGER_TEMP template <typename Integer, typename Dummy = std::enable_if <std::is_integral <Integer>::value, bool>>
-#define UNSIGNED_TEMP template <typename IntegerU, typename Dummy = std::enable_if <std::is_unsigned <IntegerU>::value, bool>>
+#define INTEGER_TEMP template <typename Integer>
 
 class hugeint {
 	// General declarations
@@ -53,34 +52,38 @@ public:
 	hugeint ();
 	hugeint (hugeint &&to_copy) noexcept;
 	hugeint (const hugeint &to_copy);
-	hugeint (const bool &to_copy);
-	hugeint (const sint &to_copy);
-	hugeint (const int &to_copy);
-	hugeint (const llint &to_copy);
-	hugeint (const usint &to_copy);
-	hugeint (const uint &to_copy);
-	hugeint (const ullint &to_copy);
+	hugeint (bool to_copy);
+	hugeint (sint to_copy);
+	hugeint (int to_copy);
+	hugeint (llint to_copy);
+	hugeint (usint to_copy);
+	hugeint (uint to_copy);
+	hugeint (ullint to_copy);
 	hugeint (const std::string &to_copy);
-
-	operator bool () const;
-	operator short int () const;
-	operator int () const;
-	operator long long int () const;
-	operator unsigned short int () const;
-	operator unsigned int () const;
-	operator unsigned long long int () const;
-	operator std::string () const;
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
-	hugeint &operator= (const bool &to_copy);
-	hugeint &operator= (const sint &to_copy);
-	hugeint &operator= (const int &to_copy);
-	hugeint &operator= (const llint &to_copy);
-	hugeint &operator= (const usint &to_copy);
-	hugeint &operator= (const uint &to_copy);
-	hugeint &operator= (const ullint &to_copy);
+	hugeint &operator= (bool to_copy);
+	hugeint &operator= (sint to_copy);
+	hugeint &operator= (int to_copy);
+	hugeint &operator= (llint to_copy);
+	hugeint &operator= (usint to_copy);
+	hugeint &operator= (uint to_copy);
+	hugeint &operator= (ullint to_copy);
 	hugeint &operator= (const std::string &to_copy);
+
+	explicit operator bool () const;
+	explicit operator short int () const;
+	explicit operator int () const;
+	explicit operator long int () const;
+	explicit operator long long int () const;
+	explicit operator unsigned short int () const;
+	explicit operator unsigned int () const;
+	explicit operator unsigned long int () const;
+	explicit operator unsigned long long int () const;
+	explicit operator float () const;
+	explicit operator double () const;
+	explicit operator std::string () const;
 
 	// Mathematical functions
 private:
@@ -90,8 +93,8 @@ private:
 	void invert ();
 
 	static hugeint simpleMult (const hugeint &num1, const hugeint &num2);
-	hugeint karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
-	inline hugeint doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size);
+	hugeint karatsuba (hugeint &num1, hugeint &num2, std::size_t tot_size);
+	inline hugeint doMultAlgorithm (hugeint &num1, hugeint &num2, std::size_t tot_size);
 
 	bool compareSml (const hugeint &to_comp) const;
 
@@ -300,30 +303,32 @@ public:
 		return result;
 	}
 
-	INTEGER_TEMP friend hugeint &operator<<= (hugeint &lhs, const Integer &rhs) {
-		if (rhs > 0) {
-			lhs.shiftFwd(rhs);
+	template <typename T> friend hugeint &operator<<= (hugeint &lhs, const T &rhs) {
+		llint shift = rhs;
+		if (shift > 0) {
+			lhs.shiftFwd(shift);
 		}
-		else if (rhs < 0) {
-			lhs.shiftBack(-rhs);
+		else if (shift < 0) {
+			lhs.shiftBack(-shift);
 		}
 		return lhs;
 	}
-	INTEGER_TEMP friend hugeint operator<< (const hugeint &lhs, const Integer &rhs) {
+	template <typename T> friend hugeint operator<< (const hugeint &lhs, const T &rhs) {
 		hugeint calc = lhs;
 		calc <<= rhs;
 		return calc;
 	}
-	INTEGER_TEMP friend hugeint &operator>>= (hugeint &lhs, const Integer &rhs) {
-		if (rhs > 0) {
+	template <typename T> friend hugeint &operator>>= (hugeint &lhs, const T &rhs) {
+		llint shift = rhs;
+		if (shift > 0) {
 			lhs.shiftBack(rhs);
 		}
-		else if (rhs < 0) {
+		else if (shift < 0) {
 			lhs.shiftFwd(-rhs);
 		}
 		return lhs;
 	}
-	INTEGER_TEMP friend hugeint operator>> (const hugeint &lhs, const Integer &rhs) {
+	template <typename T> friend hugeint operator>> (const hugeint &lhs, const T &rhs) {
 		hugeint calc = lhs;
 		calc >>= rhs;
 		return calc;
@@ -498,38 +503,30 @@ public:
 		return result;
 	}
 
-	hugeint abs () {
+	template <typename T> hugeint pow (T exponent) {
+		calculatePow((ullint)exponent);
+		return *this;
+	}
+	template <typename T> hugeint pow (T exponent, const hugeint &modulo) {
+		calculatePow((ullint)exponent, modulo);
+		return *this;
+	}
+
+	inline hugeint abs () {
 		if (neg) {
 			negate();
 		}
 		return *this;
 	}
-	friend hugeint abs (hugeint to_abs) {
-		return to_abs.abs();
-	}
-
-	hugeint rand (size_t size, bool rand_sign) {
+	inline hugeint rand (size_t size, bool rand_sign) {
 		setRamdon(size, rand_sign);
 		return *this;
 	}
-	friend hugeint rand (size_t size, bool rand_sign) {
-		hugeint ans;
-		ans.setRamdon(size, rand_sign);
-		return ans;
-	}
 
-	// Turns self into gcd
-	hugeint gcd (const hugeint &other) {
+	inline hugeint gcd (const hugeint &other) {
 		calculateGcd(other);
 		return *this;
 	}
-	friend hugeint gcd (const hugeint &num1, const hugeint &num2) {
-		hugeint ret = num1;
-		ret.calculateGcd(num2);
-		return ret;
-	}
-
-	// Turns self into lcm
 	hugeint lcm (const hugeint &other) {
 		hugeint gcd = *this;
 		gcd.calculateGcd(other);
@@ -537,57 +534,54 @@ public:
 		calculateDiv(gcd);
 		return *this;
 	}
-	friend hugeint lcm (const hugeint &num1, const hugeint &num2) {
-		hugeint gcd = num1, ret = num1;
-		gcd.calculateGcd(num2);
-		ret.calculateMult(num2);
-		ret.calculateDiv(gcd);
-		return ret;
-	}
 
-	// Turns self into (self ^ exponent).
-	UNSIGNED_TEMP hugeint pow (IntegerU exponent) {
-		calculatePow(exponent);
-		return *this;
-	}
-	// Turns self into (self ^ exponent % modulo).
-	UNSIGNED_TEMP hugeint pow (IntegerU exponent, const hugeint &modulo) {
-		calculatePow(exponent, modulo);
-		return *this;
-	}
-
-	// Returns the floor of the roots.
 	hugeint sqrt () const {
 		return calculateNthRoot(2);
-	}
-	friend hugeint sqrt (const hugeint &num) {
-		return num.sqrt();
 	}
 	hugeint cbrt () const {
 		return calculateNthRoot(3);
 	}
-	friend hugeint cbrt (const hugeint &num) {
-		return num.cbrt();
-	}
-	UNSIGNED_TEMP hugeint nthroot (IntegerU degree) const {
-		return calculateNthRoot(degree);
-	}
-	UNSIGNED_TEMP friend hugeint nthroot (const hugeint &num, IntegerU degree) {
-		return num.nthroot(degree);
+
+	template <typename T> hugeint nthroot (T degree) const {
+		return calculateNthRoot((ullint)degree);
 	}
 };
 
-// Returns base ^ exponent.
-UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent) {
+template <typename T> hugeint pow (hugeint base, T exponent) {
 	base.pow(exponent);
 	return base;
 }
-// Returns base ^ exponent % modulo.
-UNSIGNED_TEMP hugeint pow (hugeint base, IntegerU exponent, const hugeint &modulo) {
+template <typename T> hugeint pow (hugeint base, T exponent, const hugeint &modulo) {
 	base.pow(exponent, modulo);
 	return base;
 }
 
-#undef UNSIGNED_TEMP
-#undef INTEGER_TEMP
+inline hugeint abs (hugeint to_abs) {
+	return to_abs.abs();
+}
+inline hugeint rand (size_t size, bool rand_sign) {
+	hugeint ans;
+	ans.rand(size, rand_sign);
+	return ans;
+}
+
+inline hugeint gcd (const hugeint &num1, const hugeint &num2) {
+	hugeint ret = num1;
+	ret.gcd(num2);
+	return ret;
+}
+inline hugeint lcm (const hugeint &num1, const hugeint &num2) {
+	return num1 / gcd(num1, num2) * num2;
+}
+
+inline hugeint sqrt (const hugeint &num) {
+	return num.sqrt();
+}
+inline hugeint cbrt (const hugeint &num) {
+	return num.cbrt();
+}
+template <typename T> inline hugeint nthroot (const hugeint &num, T degree) {
+	return num.nthroot(degree);
+}
+
 #undef NOT_HUGEINT_TEMP

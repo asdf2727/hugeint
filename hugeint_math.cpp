@@ -2,11 +2,11 @@
 
 // Intermideats
 
-// Size also works as log2 (gives the number of binary digits after the most significant bit of 1, for example 64.size() = 6, etc.)
+// Size also works as log2 (gives the number of binary digits, for example 64.size() = 7)
 unsigned long long int hugeint::size () const {
-	ullint size = (bits.size() << 5) - 1;
+	ullint size = bits.size() << 5;
 	if (!bits.empty()) {
-		for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+		size -= __builtin_clz(bits.back());
 	}
 	return size;
 }
@@ -74,58 +74,56 @@ hugeint hugeint::simpleMult (const hugeint &num1, const hugeint &num2) {
 	return ans;
 }
 // Explination for the karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
-hugeint hugeint::karatsuba (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
+hugeint hugeint::karatsuba (hugeint &num1, hugeint &num2, std::size_t tot_size) {
 	hugeint high, mid, low;
-	hugeint num1L = num1, num1H;
-	hugeint num2L = num2, num2H;
+	hugeint &num1L = num1;
+	hugeint num1H;
+	hugeint &num2L = num2;
+	hugeint num2H;
 	tot_size >>= 1;
 	if (num1.bits.size() > tot_size) {
-		for (std::size_t index = tot_size; index < num1.bits.size(); index++) {
-			num1H.bits.push_back(num1.bits[index]);
-		}
+		num1H.resize(tot_size);
+		std::copy(num1.bits.begin() + (llint)tot_size, num1.bits.end(), num1H.bits.begin());
 		num1L.resize(tot_size);
 		num1L.clearZeros();
 	}
 	if (num2.bits.size() > tot_size) {
-		for (std::size_t index = tot_size; index < num2.bits.size(); index++) {
-			num2H.bits.push_back(num2.bits[index]);
-		}
+		num2H.resize(tot_size);
+		std::copy(num2.bits.begin() + (llint)tot_size, num2.bits.end(), num2H.bits.begin());
 		num2L.resize(tot_size);
 		num2L.clearZeros();
 	}
+	hugeint add1 = num1L + num1H;
+	hugeint add2 = num2L + num2H;
 	high = doMultAlgorithm(num1H, num2H, tot_size);
 	low = doMultAlgorithm(num1L, num2L, tot_size);
 
 	mid = -high - low;
-	num1L += num1H;
-	num2L += num2H;
-	if (num1L.bits.size() > tot_size) {
-		mid += num2L << (tot_size << 5);
-		num1L.bits.pop_back();
+	if (add1.bits.size() > tot_size) {
+		mid += add2 << (tot_size << 5);
+		add1.bits.pop_back();
 	}
-	if (num2L.bits.size() > tot_size) {
-		mid += num1L << (tot_size << 5);
-		num2L.bits.pop_back();
+	if (add2.bits.size() > tot_size) {
+		mid += add1 << (tot_size << 5);
+		add2.bits.pop_back();
 	}
-	mid += doMultAlgorithm(num1L, num2L, tot_size);
+	mid += doMultAlgorithm(add1, add2, tot_size);
 	high <<= tot_size << 5;
 	high += mid;
 	high <<= tot_size << 5;
 	high += low;
 	return high;
 }
-inline hugeint hugeint::doMultAlgorithm (const hugeint &num1, const hugeint &num2, std::size_t tot_size) {
+inline hugeint hugeint::doMultAlgorithm (hugeint &num1, hugeint &num2, std::size_t tot_size) {
 	if (num1.bits.empty() || num2.bits.empty()) {
 		return 0;
 	}
-
 	while (tot_size && tot_size >> 1 >= std::max(num1.bits.size(), num2.bits.size())) {
 		tot_size >>= 1;
 	}
 	if (tot_size <= 1) {
 		return (ullint)num1.bits[0] * num2.bits[0];
 	}
-
 	size_t mins = std::min(num1.bits.size(), num2.bits.size()), maxs = std::max(num1.bits.size(), num2.bits.size());
 	return mins * mins < maxs ? simpleMult(num1, num2) : karatsuba(num1, num2, tot_size);
 }
@@ -307,27 +305,10 @@ void hugeint::calculateDec (const hugeint &to_dec) {
 
 void hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
-	if (neg) {
-		negate();
-	}
-	const hugeint *calc;
-	int max_size = 0;
-	if (to_mult.neg) {
-		auto *negated = new hugeint(to_mult);
-		negated->negate();
-		calc = negated;
-	}
-	else {
-		calc = &to_mult;
-	}
-	for (max_size = 1; max_size < std::max(calc->bits.size(), this->bits.size()); max_size <<= 1);
-	*this = doMultAlgorithm(*this, *calc, max_size);
-	if (to_mult.neg) {
-		delete calc;
-	}
-	if (is_neg) {
-		negate();
-	}
+	hugeint &num1 = *this;
+	hugeint num2 = ::abs(to_mult);
+	std::size_t max_size = 1ull << ((sizeof(std::size_t) << 3) - __builtin_clzll(num1.bits.size() | num2.bits.size() | 1));
+	num1 = is_neg ? -doMultAlgorithm(num1, num2, max_size) : doMultAlgorithm(num1, num2, max_size);
 }
 
 void hugeint::calculateDiv (const hugeint &to_div) {

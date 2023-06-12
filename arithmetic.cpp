@@ -1,3 +1,5 @@
+#pragma GCC optimize("Ofast")
+
 #include <iostream>
 #include <vector>
 #include <chrono>
@@ -123,6 +125,18 @@ private:
 			}
 			ans = params.empty() ? (hugeint)0 : params[0];
 		}
+		else if (str == "fact") {
+			if (params.size() > 1) {
+				message = "Function \'fact\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			hugeint ans = 1;
+			for (int index = 2; index <= (int)params[0]; index++) {
+				ans *= index;
+			}
+			return ans;
+		}
 		else if (str == "rand") {
 			if (params.size() > 1) {
 				message = "Function \'rand\' only accepts 0 or 1 parameters";
@@ -153,7 +167,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = pow(params[0], params[1]);
+			ans = pow(params[0], (int)params[1]);
 		}
 		else if (str == "sqrt") {
 			if (params.size() != 1) {
@@ -352,9 +366,9 @@ int main () {
 	}
 	else {
 		std::cout << "Answer:" << std::endl;
-		std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
+		//std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
 		std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+		//std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
+		//std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
 	}
 }
