@@ -74,9 +74,11 @@ public:
 	explicit operator bool () const;
 	explicit operator short int () const;
 	explicit operator int () const;
+	explicit operator long int () const;
 	explicit operator long long int () const;
 	explicit operator unsigned short int () const;
 	explicit operator unsigned int () const;
+	explicit operator unsigned long int () const;
 	explicit operator unsigned long long int () const;
 	explicit operator float () const;
 	explicit operator double () const;

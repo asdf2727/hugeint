@@ -538,6 +538,9 @@ hugeint::operator short int () const {
 hugeint::operator int () const {
 	return (bits.empty() ? (neg ? -1 : 0) : (int)bits[0]);
 }
+hugeint::operator long int () const {
+	return (lint)this->operator long long int();
+}
 hugeint::operator long long int () const {
 	return (bits.empty() ? (neg ? -1 : 0) : bits[0] + (llint)(bits.size() < 2 ? (neg ? -0x7fffffff00000000 : 0) : (ullint)bits[1] << 32));
 }
@@ -546,6 +549,9 @@ hugeint::operator unsigned short int () const {
 }
 hugeint::operator unsigned int () const {
 	return (bits.empty() ? 0 : (neg ? -bits[0] : bits[0]));
+}
+hugeint::operator unsigned long int () const {
+	return (ulint)this->operator unsigned long long int();
 }
 hugeint::operator unsigned long long int () const {
 	return (bits.empty() ? 0 : (neg ? -bits[0] : bits[0]) + (bits.size() < 2 ? 0 : (neg ? -(llint)bits[1] : (llint)bits[1]) << 32));

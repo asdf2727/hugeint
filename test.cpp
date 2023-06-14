@@ -89,11 +89,12 @@ hugeint multiple (int max_n) {
 }
 
 int main () {
-	timer global;
-	hugeint ans;
-	double time;
-	global.start();
-	ans = ((hugeint)2).pow(1000000);
-	time = global.reset();
-	std::cout << ans.size() << '\n' << time << '\n';
+	//timer global;
+	//hugeint ans;
+	//double time;
+	//global.start();
+	//ans = ((hugeint)2).pow(1000000);
+	//time = global.reset();
+	//std::cout << ans.size() << '\n' << time << '\n';
+	std::cout << sizeof(std::size_t) << '\n';
 }
