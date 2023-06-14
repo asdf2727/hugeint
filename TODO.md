@@ -19,9 +19,10 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [x] implement random
 - [ ] include parser in a separate class or in the same class
 - [ ] add float and double to casting
-- [ ] add throw to div if you divide by 0
-- [ ] order math functions to have both self modifiers and result
-- [ ] add rbegin instead of wierd for from n-1 to overflow
+- [ ] add float and double to constructors
+- [x] add throw to div if you divide by 0
+- [x] add rbegin instead of wierd for from n-1 to overflow
+- [ ] add factorial
 
 ### faster algorithms:
 

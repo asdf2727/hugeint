@@ -6,7 +6,7 @@
 unsigned long long int hugeint::size () const {
 	ullint size = bits.size() << 5;
 	if (!bits.empty()) {
-		size -= __builtin_clz(bits.back());
+		size -= __builtin_clz(neg ? ~bits.back() : bits.back());
 	}
 	return size;
 }
@@ -48,8 +48,8 @@ void hugeint::setBit (size_t pos, bool val) {
 hugeint hugeint::simpleMult (const hugeint &num1, const hugeint &num2) {
 	hugeint ans = 0;
 	ullint chunk, over;
-	for (size_t index = num1.bits.size() - 1; index < num1.bits.size(); index--) {
-		chunk = num1.bits[index];
+	for (std::deque <uint>::const_reverse_iterator pos = num1.bits.rbegin(); pos != num1.bits.rend(); pos++) {
+		chunk = *pos;
 		if (ans) {
 			ans.bits.push_front(0);
 		}
@@ -306,12 +306,16 @@ void hugeint::calculateDec (const hugeint &to_dec) {
 void hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
 	hugeint &num1 = *this;
+	num1.abs();
 	hugeint num2 = ::abs(to_mult);
 	std::size_t max_size = 1ull << ((sizeof(std::size_t) << 3) - __builtin_clzll(num1.bits.size() | num2.bits.size() | 1));
 	num1 = is_neg ? -doMultAlgorithm(num1, num2, max_size) : doMultAlgorithm(num1, num2, max_size);
 }
 
 void hugeint::calculateDiv (const hugeint &to_div) {
+	if (!to_div.neg && to_div.bits.empty()) {
+		throw (std::invalid_argument("Division by 0"));
+	}
 	hugeint ans, rest;
 	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
@@ -326,9 +330,9 @@ void hugeint::calculateDiv (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		if (!rest.bits.empty() || bits[index]) {
-			rest.bits.push_front(bits[index]);
+	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != bits.rend(); pos++) {
+		if (!rest.bits.empty() || *pos) {
+			rest.bits.push_front(*pos);
 		}
 		ans.bits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
 	}
@@ -355,9 +359,9 @@ void hugeint::calculateMod (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		if (!rest.bits.empty() || bits[index]) {
-			rest.bits.push_front(bits[index]);
+	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != bits.rend(); pos++) {
+		if (!rest.bits.empty() || *pos) {
+			rest.bits.push_front(*pos);
 			if (*calc <= rest) {
 				divBinSearch(rest, *calc);
 			}
@@ -397,6 +401,12 @@ void hugeint::calculateGcd (hugeint other) {
 }
 
 void hugeint::calculatePow (ullint exponent) {
+	if (exponent == 0) {
+		neg = false;
+		bits.clear();
+		bits.push_back(1);
+		return;
+	}
 	while (!(exponent & 1) && exponent) {
 		exponent >>= 1;
 		calculateMult(*this);

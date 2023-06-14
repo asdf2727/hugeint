@@ -205,22 +205,19 @@ size_t hugeint::fromString (const std::string::const_iterator &begin, const std:
 std::string hugeint::toHex () const {
 	std::string ans;
 	ans.reserve(bits.size() * 8);
-	const hugeint *calc = nullptr;
+	const hugeint *calc = this;
 	if (neg) {
-		hugeint *negated = new hugeint(*this);
-		negated->negate();
-		calc = negated;
+		calc = new hugeint(-*this);
 		ans = "-0x";
 	}
 	else {
-		calc = this;
 		ans = "0x";
 	}
 	bool first0 = true;
 	uint to_push;
-	for (std::size_t index = calc->bits.size() - 1; index < calc->bits.size(); index--) {
+	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != calc->bits.rend(); pos++) {
 		for (int bit = 28; bit >= 0; bit -= 4) {
-			to_push = (calc->bits[index] >> bit) & 15;
+			to_push = (*pos >> bit) & 15;
 			if (first0 && to_push == 0) {
 				continue;
 			}
@@ -248,22 +245,16 @@ std::string hugeint::toHex () const {
 }
 std::string hugeint::toDec () const {
 	bool is_neg = neg;
-	const hugeint *calc = nullptr;
+	const hugeint *calc = this;
 	if (neg) {
-		hugeint *negated = new hugeint(*this);
-		negated->negate();
-		calc = negated;
+		calc = new hugeint(-*this);
 	}
-	else {
-		calc = this;
-	}
-
 	std::string ans;
 	ans.reserve(bits.size() * 9633 / 1000 + 5); // container size multiplied by 32 * ln2 / ln10 to estimate final size
 	char carry;
 	bool done;
 	ans.push_back(0);
-	for (std::size_t index = calc->bits.size() - 1; index < calc->bits.size(); index--) {
+	for (std::deque <uint>::const_reverse_iterator chunk = calc->bits.rbegin(); chunk != calc->bits.rend(); chunk++) {
 		for (uint pos = 0x80000000; pos > 0; pos >>= 1) {
 			//Multiply by 2
 			carry = 0;
@@ -281,7 +272,7 @@ std::string hugeint::toDec () const {
 				ans.push_back(1);
 			}
 			// Add 1
-			if (calc->bits[index] & pos) {
+			if (*chunk & pos) {
 				done = false;
 				for (char &chr : ans) {
 					if (chr == 9) {
@@ -314,28 +305,25 @@ std::string hugeint::toDec () const {
 std::string hugeint::toOct () const {
 	std::string ans;
 	ans.reserve(bits.size() * 32 / 3 + 1);
-	const hugeint *calc = nullptr;
+	const hugeint *calc = this;
 	if (neg) {
-		hugeint *negated = new hugeint(*this);
-		negated->negate();
-		calc = negated;
+		calc = new hugeint(-*this);
 		ans = "-0";
 	}
 	else {
-		calc = this;
 		ans = "0";
 	}
 	bool first0 = true;
 	ullint form = 0;
 	int count = calc->bits.size() % 3 - 3;
 	uint to_push;
-	std::size_t index = calc->bits.size() - 1;
+	std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin();
 	while (true) {
 		if (count < 0) {
-			if (index > calc->bits.size()) {
+			if (pos != calc->bits.rend()) {
 				break;
 			}
-			form = (form << 32) | calc->bits[index--];
+			form = (form << 32) | *pos++;
 			count += 32;
 		}
 		to_push = (form >> count) & 7;
@@ -362,22 +350,16 @@ std::string hugeint::toOct () const {
 std::string hugeint::toBin () const {
 	std::string ans;
 	ans.reserve(bits.size() * 32 / 3 + 1);
-	const hugeint *calc = nullptr;
+	const hugeint *calc = this;
 	if (neg) {
-		hugeint *negated = new hugeint(*this);
-		negated->negate();
-		calc = negated;
+		calc = new hugeint(-*this);
 		ans = "-";
-	}
-	else {
-		calc = this;
-		ans = "";
 	}
 	bool first0 = true;
 	uint to_push;
-	for (std::size_t index = calc->bits.size() - 1; index < calc->bits.size(); index--) {
+	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != calc->bits.rend(); pos++) {
 		for (int bit = 31; bit >= 0; bit--) {
-			to_push = (calc->bits[index] >> bit) & 1;
+			to_push = (*pos >> bit) & 1;
 			if (first0 && to_push == 0) {
 				continue;
 			}
@@ -387,14 +369,9 @@ std::string hugeint::toBin () const {
 	}
 	if (neg) {
 		delete calc;
-		if (ans.size() == 1) {
-			ans.push_back('1');
-		}
 	}
-	else {
-		if (ans.empty()) {
-			ans.push_back('0');
-		}
+	else if (ans.empty()) {
+		ans.push_back('0');
 	}
 	ans.push_back('b');
 	return ans;
@@ -574,12 +551,67 @@ hugeint::operator unsigned long long int () const {
 	return (bits.empty() ? 0 : (neg ? -bits[0] : bits[0]) + (bits.size() < 2 ? 0 : (neg ? -(llint)bits[1] : (llint)bits[1]) << 32));
 }
 hugeint::operator float () const {
-	// TODO
-	return (llint)*this;
+	if (!neg && bits.empty()) {
+		return (float)0;
+	}
+	if (size() > 128) {
+		return neg ? -__builtin_inff() : __builtin_inff();
+	}
+	bool sign = neg;
+	const hugeint *num = this;
+	if (neg) {
+		hugeint *temp = new hugeint(-*this);
+		num = temp;
+	}
+	uint mant, add;
+	add = num->bits.back();
+	int shift = __builtin_clz(add) - 8;
+	mant = (shift < 0 ? add >> (-shift) : add << shift);
+	shift -= 32;
+	if (num->bits.size() > 1) {
+		add = num->bits[num->bits.size() - 2];
+		mant |= (shift < 0 ? add >> (-shift) : add << shift);
+	}
+	mant &= (1u << 23) - 1;
+	if (sign) {
+		delete (num);
+	}
+	int val = (neg ? 0x80000000 : 0x00000000) | ((size() + 126) << 23) | mant;
+	return *((float *)&val);
 }
 hugeint::operator double () const {
-	// TODO
-	return (llint)*this;
+	if (!neg && bits.empty()) {
+		return (double)0;
+	}
+	if (size() > 1024) {
+		return neg ? -__builtin_inf() : __builtin_inf();
+	}
+	bool sign = neg;
+	const hugeint *num = this;
+	if (neg) {
+		hugeint *temp = new hugeint(-*this);
+		num = temp;
+	}
+	ullint mant, add;
+	add = num->bits.back();
+	int shift = __builtin_clzll(add) - 11;
+	mant = (shift < 0 ? add >> (-shift) : add << shift);
+	shift -= 32;
+	if (num->bits.size() > 1) {
+		add = num->bits[num->bits.size() - 2];
+		mant |= (shift < 0 ? add >> (-shift) : add << shift);
+		shift -= 32;
+	}
+	if (num->bits.size() > 2) {
+		add = num->bits[num->bits.size() - 3];
+		mant |= (shift < 0 ? add >> (-shift) : add << shift);
+	}
+	mant &= (1ull << 52) - 1;
+	if (sign) {
+		delete (num);
+	}
+	ullint val = (neg ? 0x8000000000000000 : 0x0000000000000000) | ((size() + 1022) << 52) | mant;
+	return *((double *)&val);
 }
 hugeint::operator std::string () const {
 	return toDec();

@@ -4,13 +4,12 @@
 #include <string>
 #include <deque>
 #include <cmath>
-#include <cstring> // memset
+#include <climits>
 #include <type_traits> // enable_if
 #include <random>
 #include <functional>
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
-#define INTEGER_TEMP template <typename Integer>
 
 class hugeint {
 	// General declarations
