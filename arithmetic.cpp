@@ -364,9 +364,8 @@ int main () {
 	}
 	else {
 		std::cout << "Answer:" << std::endl;
-		std::cout << "\tFloat:       " << (float)ans << " in " << global.reset() << " seconds." << std::endl;
 		std::cout << "\tDouble:      " << (double)ans << " in " << global.reset() << " seconds." << std::endl;
-		//std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
 		//std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
 		//std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
 		//std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;

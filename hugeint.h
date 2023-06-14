@@ -74,11 +74,9 @@ public:
 	explicit operator bool () const;
 	explicit operator short int () const;
 	explicit operator int () const;
-	explicit operator long int () const;
 	explicit operator long long int () const;
 	explicit operator unsigned short int () const;
 	explicit operator unsigned int () const;
-	explicit operator unsigned long int () const;
 	explicit operator unsigned long long int () const;
 	explicit operator float () const;
 	explicit operator double () const;
@@ -86,7 +84,6 @@ public:
 
 	// Mathematical functions
 private:
-	ullint size () const;
 	void clearZeros ();
 	void resize (std::size_t new_size);
 	void invert ();
@@ -126,6 +123,7 @@ private:
 	hugeint calculateNthRoot (ullint degree) const;
 public:
 	// Negates self
+	ullint size () const;
 	void negate ();
 
 	bool getBit (size_t pos) const;

@@ -92,14 +92,8 @@ int main () {
 	timer global;
 	hugeint ans;
 	double time;
-	int max_n;
-	std::cin >> max_n;
 	global.start();
-	ans = factorial(max_n);
+	ans = ((hugeint)2).pow(1000000);
 	time = global.reset();
-	std::cout << ans << '\n' << time << '\n';
-	global.start();
-	ans = multiple(max_n);
-	time = global.reset();
-	std::cout << ans << '\n' << time << '\n';
+	std::cout << ans.size() << '\n' << time << '\n';
 }
