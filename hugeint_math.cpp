@@ -47,16 +47,16 @@ void hugeint::setBit (size_t pos, bool val) {
 
 hugeint hugeint::simpleMult (const hugeint &num1, const hugeint &num2) {
 	hugeint ans = 0;
-	ullint chunk, over;
+	ullint mult, over;
 	for (std::deque <uint>::const_reverse_iterator pos = num1.bits.rbegin(); pos != num1.bits.rend(); pos++) {
-		chunk = *pos;
+		mult = *pos;
 		if (ans) {
 			ans.bits.push_front(0);
 		}
 		ans.resize(std::max(ans.bits.size(), num2.bits.size() + 1));
 		over = 0;
 		for (size_t index2 = 0; index2 < num2.bits.size(); index2++) {
-			over += chunk * num2.bits[index2] + ans.bits[index2];
+			over += num2.bits[index2] * mult + ans.bits[index2];
 			ans.bits[index2] = (uint)over;
 			over >>= 32;
 		}

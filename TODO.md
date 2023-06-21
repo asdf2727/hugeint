@@ -18,7 +18,7 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [x] implement gcd and lcm
 - [x] implement random
 - [ ] include parser in a separate class or in the same class
-- [ ] add float and double to casting
+- [x] add float and double to casting
 - [ ] add float and double to constructors
 - [x] add throw to div if you divide by 0
 - [x] add rbegin instead of wierd for from n-1 to overflow

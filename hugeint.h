@@ -22,7 +22,7 @@ private:
 	typedef unsigned int uint;
 	typedef unsigned short int usint;
 
-	bool neg;
+	bool neg = false;
 	std::deque <uint> bits;
 
 	// Casting functions
@@ -50,7 +50,7 @@ public:
 
 	hugeint ();
 	hugeint (hugeint &&to_copy) noexcept;
-	hugeint (const hugeint &to_copy);
+	hugeint (const hugeint &to_copy) = default;
 	hugeint (bool to_copy);
 	hugeint (sint to_copy);
 	hugeint (int to_copy);
@@ -58,7 +58,10 @@ public:
 	hugeint (usint to_copy);
 	hugeint (uint to_copy);
 	hugeint (ullint to_copy);
+	hugeint (float to_copy);
+	hugeint (double to_copy);
 	hugeint (const std::string &to_copy);
+	hugeint (const char *to_copy);
 
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
@@ -69,7 +72,10 @@ public:
 	hugeint &operator= (usint to_copy);
 	hugeint &operator= (uint to_copy);
 	hugeint &operator= (ullint to_copy);
+	hugeint &operator= (float to_copy);
+	hugeint &operator= (double to_copy);
 	hugeint &operator= (const std::string &to_copy);
+	hugeint &operator= (const char *to_copy);
 
 	explicit operator bool () const;
 	explicit operator short int () const;
@@ -83,6 +89,7 @@ public:
 	explicit operator float () const;
 	explicit operator double () const;
 	explicit operator std::string () const;
+	explicit operator const char * () const;
 
 	// Mathematical functions
 private:
