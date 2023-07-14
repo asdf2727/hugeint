@@ -46,11 +46,13 @@ public:
 	}
 };
 
+typedef unsigned long long int ullint;
+
 hugeint factorial (int max_n) {
 	hugeint ans = 1;
-	int copy, exp;
-	std::bitset <10005> iscomp;
-	for (int val = 2; val <= max_n; val++) {
+	ullint copy, exp;
+	std::vector <bool> iscomp(max_n + 1);
+	for (ullint val = 2; val <= max_n; val++) {
 		if (!iscomp[val]) {
 			copy = max_n;
 			exp = 0;
@@ -59,7 +61,7 @@ hugeint factorial (int max_n) {
 				exp += copy;
 			}
 			ans *= pow((hugeint)val, exp);
-			for (int mod = val * val; mod <= max_n; mod += val) {
+			for (ullint mod = val * val; mod <= max_n; mod += val) {
 				iscomp[mod] = true;
 			}
 		}
@@ -89,10 +91,8 @@ hugeint multiple (int max_n) {
 }
 
 int main () {
-	hugeint num;
-	double val;
-	std::cin >> val;
-	num = val;
-	std::cout << val << '\n';
-	std::cout << num << '\n';
+	timer global;
+	double num = 3e50;
+	hugeint val = num;
+	std::cout << (hugeint)3 * pow((hugeint)10, 50);
 }

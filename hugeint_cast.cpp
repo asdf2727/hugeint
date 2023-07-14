@@ -463,7 +463,7 @@ hugeint::hugeint (double to_copy) {
 	ullint val = *(ullint *)(&to_copy);
 	uint shift = ((val & 0x7ff0000000000000) >> 52) - 1075;
 	bits.push_back(val & 0x00000000ffffffff);
-	bits.push_back(((val & 0x000fffff00000000) >> 32) | 0x0010000000000000);
+	bits.push_back(((val & 0x000fffff00000000) >> 32) | 0x00100000);
 	*this <<= shift;
 	clearZeros();
 	if (val & 0x8000000000000000) {

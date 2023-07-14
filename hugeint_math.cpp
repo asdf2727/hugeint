@@ -20,12 +20,12 @@ void hugeint::resize (std::size_t new_size) {
 	bits.resize(new_size, (neg ? 0xffffffff : 0));
 }
 void hugeint::invert () {
+	neg = !neg;
 	for (uint &word : bits) {
 		word = ~word;
 	}
 }
 void hugeint::negate () {
-	neg = !neg;
 	invert();
 	increment();
 }
@@ -330,7 +330,7 @@ void hugeint::calculateDiv (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != bits.rend(); pos++) {
+	for (std::deque <uint>::const_reverse_iterator pos = bits.rbegin(); pos != bits.rend(); pos++) {
 		if (!rest.bits.empty() || *pos) {
 			rest.bits.push_front(*pos);
 		}
@@ -359,7 +359,7 @@ void hugeint::calculateMod (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::deque <uint>::const_reverse_iterator pos = calc->bits.rbegin(); pos != bits.rend(); pos++) {
+	for (std::deque <uint>::const_reverse_iterator pos = bits.rbegin(); pos != bits.rend(); pos++) {
 		if (!rest.bits.empty() || *pos) {
 			rest.bits.push_front(*pos);
 			if (*calc <= rest) {
