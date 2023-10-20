@@ -49,8 +49,8 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 
 ### Efficiency
 
+- unlike other public implementations, numbers are stored in base 2^32 via two's complement for speed of computation
 - quick computation until 100000s of digits, but no hard limit exists.
-- all numbers are stored in base 2^32 via two's complement for speed of computation
 - small asymptotic complexity algorithms such as Karatsuba's algorithm
 
 # Usage
@@ -79,15 +79,15 @@ std::cout << num * 2;
 Here are all the ways hugeints can be initialised. All assignments work with the same types.
 
 ```c++
-hugeint num;			  // default constructor. Default value is 0.
-hugeint num2(num);		  // const reference constructor/assignment.
-hugeint num3(sqrt(num));  // rvalue reference constructor/assignment.
-hugeint num4(true);		  // bool constructor/assignment. False is 0 and true is 1.
-hugeint num5(-5);		  // integer constructor/assignment. Works with all integer types,including shorts and long longs, signed or unsigned.
-hugeint num5(4.2e10);	  // floating point constructor/assignment. Works with floats anddoubles.
-hugeint num6("-345");	  // string constructor/assignment. Works with char* and std::string.
+hugeint num;             // default constructor. Default value is 0.
+hugeint num2(num);       // const reference constructor/assignment.
+hugeint num3(sqrt(num)); // rvalue reference constructor/assignment.
+hugeint num4(true);      // bool constructor/assignment. False is 0 and true is 1.
+hugeint num5(-5);        // integer constructor/assignment. Works with all integer types,including shorts and long longs, signed or unsigned.
+hugeint num5(4.2e10);    // floating point constructor/assignment. Works with floats anddoubles.
+hugeint num6("-345");    // string constructor/assignment. Works with char* and std::string.
   
-num2 = num;				  // Assignments can be done with the same types as constructors
+num2 = num;              // Assignments can be done with the same types as constructors
 num3 = sqrt(num);
 num4 = true;
 num5 = -5;
@@ -121,10 +121,10 @@ Casting works with the same types as assignment:
 ```c++
 hugeint num = "14367289165784932";
 
-bool val = (bool)num;				// false if 0, true otherwise.
-int val2 = (int)num;				 // works with any integer type
-float val2 = (float)num;			 // also works with double
-std::string val3 = (std::string)num  // also works with char*
+bool val = (bool)num;               // false if 0, true otherwise.
+int val2 = (int)num;                // works with any integer type
+float val2 = (float)num;            // also works with double
+std::string val3 = (std::string)num // also works with char*
 ```
 
 ## Operators
