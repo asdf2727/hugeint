@@ -62,11 +62,13 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 Add ```hugeint_math.cpp```, ```hugeint_cast.cpp``` and ```hugeint.h``` to your project and include the header file
 where you use the class.
 
+After that, declare a variable with ```hugeint my_val;``` and you're good to go!
+
 ### Example
 
-The example present in the repository is ```arithmetic.cpp```, an extensive parser using the hugeint class capable of ```+```, ```-```, ```*```, ```/```, ```%```, ```^```, parantheses and order of operations. It also comes with some functions such as ```sqrt()``` and ```gcd()```.
+The example present in the repository is ```arithmetic.cpp```, an extensive parser using hugeint, capable of ```+```, ```-```, ```*```, ```/```, ```%```, ```^```, parantheses and order of operations. It also comes with some functions such as ```sqrt()``` and ```gcd()```.
 
-This is how you create a new project, using this example:
+This is how to create a new project, using this example:
 1. Download all .cpp and .h files and put them in a folder.
 2. Run ```g++ arithmetic.cpp hugeint_math.cpp hugeint_cast.cpp hugeint.h -o arithmetic``` in the folder if you use g++, or the equivalent command in any other compiler of your choosing.
 3. Now there shoud be an executable in the same folder which you can run. The program waits until a line was written then outputs the result in 4 bases.
