@@ -207,12 +207,12 @@ size_t hugeint::fromString (std::string::const_iterator begin, std::string::cons
 }
 
 std::string hugeint::toHex () const {
-	std::string ans;
+	std::string ans = "0x";
 	ans.reserve(bits.size() * 8);
 	const hugeint *calc = this;
 	if (neg) {
 		calc = new hugeint(-*this);
-		ans = "-";
+		ans = "-0x";
 	}
 	bool first0 = true;
 	uint to_push;
@@ -224,7 +224,7 @@ std::string hugeint::toHex () const {
 			}
 			first0 = false;
 			if (to_push > 9) {
-				ans.push_back(to_push + 'a' - 10);
+				ans.push_back(to_push + 'A' - 10);
 			}
 			else {
 				ans.push_back(to_push + '0');
@@ -242,7 +242,6 @@ std::string hugeint::toHex () const {
 			ans.push_back('0');
 		}
 	}
-	ans.push_back('x');
 	return ans;
 }
 std::string hugeint::toDec () const {
@@ -251,7 +250,7 @@ std::string hugeint::toDec () const {
 	if (neg) {
 		calc = new hugeint(-*this);
 	}
-	std::string ans;
+	std::string ans = "";
 	ans.reserve(bits.size() * 9633 / 1000 + 5); // container size multiplied by 32 * ln2 / ln10 to estimate final size
 	ans.push_back(0);
 	for (std::deque <uint>::const_reverse_iterator chunk = calc->bits.rbegin(); chunk != calc->bits.rend(); chunk++) {
@@ -290,12 +289,12 @@ std::string hugeint::toDec () const {
 	return ans;
 }
 std::string hugeint::toOct () const {
-	std::string ans;
+	std::string ans = "o";
 	ans.reserve(bits.size() * 32 / 3 + 1);
 	const hugeint *calc = this;
 	if (neg) {
 		calc = new hugeint(-*this);
-		ans = "-";
+		ans = "-o";
 	}
 	bool first0 = true;
 	ullint form = 0;
@@ -320,20 +319,19 @@ std::string hugeint::toOct () const {
 	}
 	if (neg) {
 		delete calc;
-		if (ans.size() == 1) {
+		if (ans.size() == 2) {
 			ans.push_back('1');
 		}
 	}
 	else {
-		if (ans.empty()) {
+		if (ans.size() == 1) {
 			ans.push_back('0');
 		}
 	}
-	ans.push_back('o');
 	return ans;
 }
 std::string hugeint::toBin () const {
-	std::string ans;
+	std::string ans = "";
 	ans.reserve(bits.size() * 32 / 3 + 1);
 	const hugeint *calc = this;
 	if (neg) {
@@ -354,9 +352,14 @@ std::string hugeint::toBin () const {
 	}
 	if (neg) {
 		delete calc;
+		if (ans.size() == 1) {
+			ans.push_back('1');
+		}
 	}
-	else if (ans.empty()) {
-		ans.push_back('0');
+	else {
+		if (ans.empty()) {
+			ans.push_back('0');
+		}
 	}
 	ans.push_back('b');
 	return ans;

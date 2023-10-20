@@ -114,7 +114,7 @@ This is used in constructors, assignments and reading with istream.
 
 The conversion between string and hugeint can be done in hexadecimal, decimal, octal or binary. The base is determined automaticly when converting.
 
->- hexadecimal notation: ```0x2df```, ```x2df```, ```2dfx```.
+>- hexadecimal notation: ```0x2DF```, ```x2DF```, ```2DFx```.
 >- decimal notation: ```735```, ```0d735```, ```d735```, ```735d```.
 >- octal notation: ```01337```, ```0o1337```, ```o1337```, ```1337o```.
 >- binary notation: ```0b1337```, ```b1337```, ```1337b```.
@@ -123,7 +123,7 @@ All letters can be lower or upper case, including the numbers for hexadecimal no
 
 Spaces (``` ```) or apostrophes (```'```) are allowed at any point inside the number, exluding prefixes or suffixes.
 
-Any number of `+` and `-` symbols can be present, as long as they are at the beginning of the string. For example, ```-x2d9``` is allowed, but ```x-2d9``` is not.
+Any number of `+` and `-` symbols can be present, as long as they are at the beginning of the string. For example, ```-x2DF``` is allowed, but ```x-2DF``` is not.
 
 **Warning:** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
 
@@ -215,21 +215,21 @@ The library also includes some functions for ease of use, with more coming in th
 
 - ### String Methods
 
-	- ```size_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an assignment of std::string
+	- ```size_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an assignment with std::string. Overwrites 'this' with the number parsed between [begin, end).
 
 	If you want to output in a base another than decimal, use one of these funtions:
 
-	- ```std::string toHex ()``` - create a string in hexadecimal. Includes ```0x``` as a prefix.
-	- ```std::string toDec ()``` - create a string in decimal.
-	- ```std::string toOct ()``` - create a string in octal. Includes ```o``` as a prefix.
-	- ```std::string toBin ()``` - create a string in octal. Includes ```b``` as a suffix.
+	- ```std::string toHex ()``` - write 'this' as a string in hexadecimal. Includes ```0x``` as a prefix.
+	- ```std::string toDec ()``` - write 'this' as a string in decimal.
+	- ```std::string toOct ()``` - write 'this' as a string in octal. Includes ```o``` as a prefix.
+	- ```std::string toBin ()``` - write 'this' as a string in octal. Includes ```b``` as a suffix.
 
 	```c++
 	hugeint num;
 	std::string str = "456";
 	num.fromString(str.begin(), str.end());
 	std::cout << num.toHex();
-	//output: 0x1c8
+	//output: 0x1C8
 	```
 
 - ### Base Methods
