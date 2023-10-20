@@ -127,6 +127,8 @@ Any number of `+` and `-` symbols can be present, as long as they are at the beg
 
 **Warning:** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
 
+The functions related to string handling are explained [here](#string-functions).
+
 ### Casting
 
 Casting works with the same types as assignment:
@@ -211,26 +213,26 @@ Hugeint includes all operators used by int, each of them made to work with itsel
 
 The library also includes some functions for ease of use, with more coming in the future. If you have any requests, you can find my mail in the bio of my profile.
 
-### String Functions
+- ### String Methods
 
-- ```size_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an assignment of std::string
+	- ```size_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an assignment of std::string
 
-If you want to output in a base another than decimal, use one of these funtions:
+	If you want to output in a base another than decimal, use one of these funtions:
 
-- ```std::string toHex ()``` - create a string in hexadecimal. Includes ```x``` as a suffix.
-- ```std::string toDec ()``` - create a string in decimal.
-- ```std::string toOct ()``` - create a string in octal. Includes ```o``` as a suffix.
-- ```std::string toBin ()``` - create a string in octal. Includes ```b``` as a suffix.
+	- ```std::string toHex ()``` - create a string in hexadecimal. Includes ```0x``` as a prefix.
+	- ```std::string toDec ()``` - create a string in decimal.
+	- ```std::string toOct ()``` - create a string in octal. Includes ```o``` as a prefix.
+	- ```std::string toBin ()``` - create a string in octal. Includes ```b``` as a suffix.
 
-```c++
-hugeint num;
-std::string str = "456";
-num.fromString(str.begin(), str.end());
-std::cout << num.toHex();
-//output: 0x1c8
-```
+	```c++
+	hugeint num;
+	std::string str = "456";
+	num.fromString(str.begin(), str.end());
+	std::cout << num.toHex();
+	//output: 0x1c8
+	```
 
-- ### Base Functions
+- ### Base Methods
 	- ```ullint size ()``` - returns the size of the number in bits.
 	- ```void negate ()``` - the same as unary ```-```. Negates the number.
 
@@ -241,7 +243,7 @@ std::cout << num.toHex();
 	//output: 3 -7
 	```
 
-- ### Bit Functions
+- ### Bit Methods
 
 	A more direct way of modifying and reading bits of the number. All functions allow positions outside written values (i.e. leading zeros), but due to two's complement negative numbers have leading ones. The position represents the bit index (e.g. 1000b is the 3rd bit).
 
