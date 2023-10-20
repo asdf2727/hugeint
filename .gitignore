@@ -36,7 +36,9 @@
 /cmake-build-release
 /cmake-build-debug
 
+#cmake files
+CMakeLists.txt
+
 #source files
 test.cpp
-CMakeLists.txt
 3n+1_Conjecture.cpp
