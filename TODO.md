@@ -43,8 +43,3 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 - [ ] example (all)
 - [ ] multiplication
 - [ ] simple multiplication
-
-### where to publish:
-
-- [ ] reddit
-- [ ] hackernews

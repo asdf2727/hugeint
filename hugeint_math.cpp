@@ -43,6 +43,7 @@ void hugeint::setBit (size_t pos, bool val) {
 	if (val ^ getBit(pos)) {
 		flipBit(pos);
 	}
+	clearZeros();
 }
 
 hugeint hugeint::simpleMult (const hugeint &num1, const hugeint &num2) {
@@ -307,7 +308,7 @@ void hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
 	hugeint &num1 = *this;
 	num1.abs();
-	hugeint num2 = ::abs(to_mult);
+	hugeint num2 = huge::abs(to_mult);
 	std::size_t max_size = 1ull << ((sizeof(std::size_t) << 3) - __builtin_clzll(num1.bits.size() | num2.bits.size() | 1));
 	num1 = is_neg ? -doMultAlgorithm(num1, num2, max_size) : doMultAlgorithm(num1, num2, max_size);
 }
@@ -385,8 +386,11 @@ void hugeint::setRamdon (size_t size, bool rand_sign) {
 	for (int index = 0; index < size >> 5; index++) {
 		bits.push_back(randomDigit());
 	}
-	if (size & 0x1f) {
+	if (size & 31) {
 		bits.push_back(randomDigit() & ((1ull << (size & 0x1f)) - 1));
+	}
+	if (neg) {
+		bits.back() = ~bits.back();
 	}
 	clearZeros();
 }
@@ -443,7 +447,7 @@ hugeint hugeint::calculateNthRoot (ullint degree) const {
 	hugeint ans;
 	for (size_t pos = size() / degree; size() / degree; pos--) {
 		ans.flipBit(pos);
-		if (::pow(ans, degree) > *this) {
+		if (huge::pow(ans, degree) > *this) {
 			ans.flipBit(pos);
 		}
 	}
