@@ -32,6 +32,7 @@
 *.app
 
 #folders
+/.vscode
 /.idea
 /cmake-build-release
 /cmake-build-debug

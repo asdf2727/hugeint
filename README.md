@@ -70,7 +70,7 @@ The example present in the repository is ```arithmetic.cpp```, an extensive pars
 
 This is how to create a new project, using this example:
 1. Download all .cpp and .h files and put them in a folder.
-2. Run ```g++ arithmetic.cpp hugeint_math.cpp hugeint_cast.cpp hugeint.h -o arithmetic``` in the folder if you use g++, or the equivalent command in any other compiler of your choosing. Compile with ```-O2``` or ```-O3``` for increased speed.
+2. Run ```g++ -O3 arithmetic.cpp hugeint_math.cpp hugeint_cast.cpp hugeint.h -o arithmetic``` in the folder if you use g++, or the equivalent command in any other compiler of your choosing. ```-O3``` is focused on speed, so if you want a more balanced executable compile with ```-O2```.
 3. Now there shoud be an executable in the same folder which you can run. The program waits until a line was written then outputs the result in 4 bases.
 
 ## Input and Output
