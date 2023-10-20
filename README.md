@@ -119,13 +119,13 @@ The conversion between string and hugeint can be done in hexadecimal, decimal, o
 >- octal notation: ```01337```, ```0o1337```, ```o1337```, ```1337o```.
 >- binary notation: ```0b1337```, ```b1337```, ```1337b```.
 
-- All letters can be lower or upper case, including the numbers for hexadecimal notation.
+All letters can be lower or upper case, including the numbers for hexadecimal notation.
 
-- Spaces (``` ```) or apostrophes (```'```) are allowed at any point inside the number, exluding prefixes or suffixes.
+Spaces (``` ```) or apostrophes (```'```) are allowed at any point inside the number, exluding prefixes or suffixes.
 
-- Any number of `+` and `-` symbols can be present, as long as they are at the beginning of the string. For example, ```-x2d9``` is allowed, but ```x-2d9``` is not.
+Any number of `+` and `-` symbols can be present, as long as they are at the beginning of the string. For example, ```-x2d9``` is allowed, but ```x-2d9``` is not.
 
-- **Warning:** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
+**Warning:** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
 
 ### Casting
 
