@@ -10,6 +10,7 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 	- [Efficiency](#efficiency)
 - [Usage](#usage)
 	- [How to use it in your project](#how-to-use-it-in-your-project)
+		- [Example](#example)
 	- [Input and Output](#input-and-output)
 		- [Iostream Compatibility](#iostream-compatibility)
 		- [Constructors and Assignments](#constructors-and-assignments)
@@ -41,6 +42,7 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 - bitwise operators
 - automatic base detection for input and multiple base options for output
 - extra functions such as gcd and sqrt
+- string parser of arithmetic operations present as an example
 
 ### Ease of Use
 
@@ -59,6 +61,15 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 
 Add ```hugeint_math.cpp```, ```hugeint_cast.cpp``` and ```hugeint.h``` to your project and include the header file
 where you use the class.
+
+### Example
+
+The example present in the repository is ```arithmetic.cpp```, an extensive parser using the hugeint class capable of ```+```, ```-```, ```*```, ```/```, ```%```, ```^```, parantheses and order of operations. It also comes with some functions such as ```sqrt()``` and ```gcd()```.
+
+This is how you create a new project, using this example:
+1. Download all .cpp and .h files and put them in a folder.
+2. Run ```g++ arithmetic.cpp hugeint_math.cpp hugeint_cast.cpp hugeint.h -o arithmetic``` in the folder if you use g++, or the equivalent command in any other compiler of your choosing.
+3. Now there shoud be an executable in the same folder which you can run. The program waits until a line was written then outputs the result in 4 bases.
 
 ## Input and Output
 
@@ -230,7 +241,7 @@ std::cout << num.toHex();
 
 - ### Bit Functions
 
-	A more direct way of modifying and reading bits of the number. All functions allow positions outside written values (i.e. leading zeros), but due to two's complement negative numbers have leading ones.
+	A more direct way of modifying and reading bits of the number. All functions allow positions outside written values (i.e. leading zeros), but due to two's complement negative numbers have leading ones. The position represents the bit index (e.g. 1000b is the 3rd bit).
 
 	- ```bool getBit (size_t pos)``` - returns the value of bit pos.
 	- ```void flipBit (size_t pos)``` - flips the bit at position pos.
