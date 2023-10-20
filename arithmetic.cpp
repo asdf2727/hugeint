@@ -149,7 +149,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = gcd(params[0], params[1]);
+			ans = huge::gcd(params[0], params[1]);
 		}
 		else if (str == "abs") {
 			if (params.size() != 1) {
@@ -157,7 +157,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = abs(params[0]);
+			ans = huge::abs(params[0]);
 		}
 		else if (str == "pow") {
 			if (params.size() != 2) {
@@ -165,7 +165,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = pow(params[0], (int)params[1]);
+			ans = huge::pow(params[0], (int)params[1]);
 		}
 		else if (str == "sqrt") {
 			if (params.size() != 1) {
@@ -173,7 +173,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = sqrt(params[0]);
+			ans = huge::sqrt(params[0]);
 		}
 		else if (str == "cbrt") {
 			if (params.size() != 1) {
@@ -181,7 +181,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = cbrt(params[0]);
+			ans = huge::cbrt(params[0]);
 		}
 		else if (str == "nthroot") {
 			if (params.size() != 2) {
@@ -189,7 +189,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = nthroot(params[0], params[1]);
+			ans = huge::nthroot(params[0], params[1]);
 		}
 		else {
 			if (has_brackets) {
@@ -364,10 +364,10 @@ int main () {
 	}
 	else {
 		std::cout << "Answer:" << std::endl;
-		//std::cout << "\tDouble:      " << ans << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tDouble:      " << ans << " in " << global.reset() << " seconds." << std::endl;
 		std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
 		std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
-		//std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
-		//std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
+		std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
 	}
 }

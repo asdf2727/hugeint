@@ -60,7 +60,7 @@ hugeint factorial (int max_n) {
 				copy /= val;
 				exp += copy;
 			}
-			ans *= pow((hugeint)val, exp);
+			ans *= huge::pow((hugeint)val, exp);
 			for (ullint mod = val * val; mod <= max_n; mod += val) {
 				iscomp[mod] = true;
 			}
@@ -81,7 +81,7 @@ hugeint multiple (int max_n) {
 				copy /= val;
 				exp++;
 			}
-			ans *= pow((hugeint)val, exp);
+			ans *= huge::pow((hugeint)val, exp);
 			for (int mod = val * val; mod <= max_n; mod += val) {
 				iscomp[mod] = true;
 			}
@@ -91,8 +91,8 @@ hugeint multiple (int max_n) {
 }
 
 int main () {
-	timer global;
-	double num = 3e50;
-	hugeint val = num;
-	std::cout << (hugeint)3 * pow((hugeint)10, 50);
+	hugeint num = "7";
+	num.negate();
+	std::cout << num.size() << ' ' << num;
+	//output: 3 -7
 }

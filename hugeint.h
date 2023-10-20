@@ -27,14 +27,15 @@ private:
 
 	// Casting functions
 private:
-	void fromHex (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
-	void fromDec (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
-	void fromOct (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
-	void fromBin (const std::string::const_iterator &start, const std::string::const_iterator &stop, size_t &errPos);
+	void fromHex (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
+	void fromDec (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
+	void fromOct (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
+	void fromBin (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
 
 public:
-	// Reads a string beetwen the two iterators (stop exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
-	size_t fromString (const std::string::const_iterator &start, const std::string::const_iterator &stop);
+	// Reads a string beetwen the two iterators (end exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
+	// It returns 0xffffffff if no parsing errors were found, else it returns the position of the first error.
+	size_t fromString (std::string::const_iterator begin, std::string::const_iterator end);
 
 	// Returns a string in hexadecimal equal to self.
 	std::string toHex () const;
@@ -541,53 +542,59 @@ public:
 		return *this;
 	}
 
-	hugeint sqrt () const {
-		return calculateNthRoot(2);
+	hugeint sqrt () {
+		*this = calculateNthRoot(2);
+		return *this;
 	}
-	hugeint cbrt () const {
-		return calculateNthRoot(3);
+	hugeint cbrt () {
+		*this = calculateNthRoot(3);
+		return *this;
 	}
 
-	template <typename T> hugeint nthroot (T degree) const {
-		return calculateNthRoot((ullint)degree);
+	template <typename T> hugeint nthroot (T degree) {
+		*this = calculateNthRoot((ullint)degree);
+		return *this;
 	}
 };
 
-template <typename T> hugeint pow (hugeint base, T exponent) {
-	base.pow(exponent);
-	return base;
-}
-template <typename T> hugeint pow (hugeint base, T exponent, const hugeint &modulo) {
-	base.pow(exponent, modulo);
-	return base;
-}
+namespace huge {
+	template <typename T> hugeint pow (hugeint base, T exponent) {
+		base.pow(exponent);
+		return base;
+	}
+	template <typename T> hugeint pow (hugeint base, T exponent, const hugeint &modulo) {
+		base.pow(exponent, modulo);
+		return base;
+	}
 
-inline hugeint abs (hugeint to_abs) {
-	return to_abs.abs();
-}
-inline hugeint rand (size_t size, bool rand_sign) {
-	hugeint ans;
-	ans.rand(size, rand_sign);
-	return ans;
-}
+	inline hugeint abs (hugeint to_abs) {
+		return to_abs.abs();
+	}
+	inline hugeint rand (size_t size, bool rand_sign) {
+		hugeint ans;
+		return ans.rand(size, rand_sign);
+	}
 
-inline hugeint gcd (const hugeint &num1, const hugeint &num2) {
-	hugeint ret = num1;
-	ret.gcd(num2);
-	return ret;
-}
-inline hugeint lcm (const hugeint &num1, const hugeint &num2) {
-	return num1 / gcd(num1, num2) * num2;
-}
+	inline hugeint gcd (const hugeint &num1, const hugeint &num2) {
+		hugeint ret = num1;
+		return ret.gcd(num2);
+	}
+	inline hugeint lcm (const hugeint &num1, const hugeint &num2) {
+		return num1 / gcd(num1, num2) * num2;
+	}
 
-inline hugeint sqrt (const hugeint &num) {
-	return num.sqrt();
-}
-inline hugeint cbrt (const hugeint &num) {
-	return num.cbrt();
-}
-template <typename T> inline hugeint nthroot (const hugeint &num, T degree) {
-	return num.nthroot(degree);
+	inline hugeint sqrt (const hugeint &num) {
+		hugeint ret = num;
+		return ret.sqrt();
+	}
+	inline hugeint cbrt (const hugeint &num) {
+		hugeint ret = num;
+		return ret.cbrt();
+	}
+	template <typename T> inline hugeint nthroot (const hugeint &num, T degree) {
+		hugeint ret = num;
+		return ret.nthroot(degree);
+	}
 }
 
 #undef NOT_HUGEINT_TEMP

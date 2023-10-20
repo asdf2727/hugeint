@@ -31,4 +31,12 @@
 *.out
 *.app
 
+#folders
 /.idea
+/cmake-build-release
+/cmake-build-debug
+
+#source files
+test.cpp
+CMakeLists.txt
+3n+1_Conjecture.cpp
