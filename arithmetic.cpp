@@ -24,7 +24,7 @@ public:
 
 class calculator {
 private:
-	__gnu_cxx::__normal_iterator <char *, std::basic_string <char>> parse;
+	std::string::const_iterator parse;
 	const char operators[6] = { '+', '-', '*', '/', '%', '^' };
 
 	int error_id;
@@ -56,7 +56,7 @@ private:
 		hugeint ans = 0;
 		int errPos;
 		bool neg = false;
-		std::string::iterator start = parse;
+		std::string::const_iterator start = parse;
 		std::string str;
 
 		/// Read string
