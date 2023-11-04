@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+#folders
+/cmake-build-debug
+/cmake-build-release
+/.vscode
+/.idea
+
+#CMake files
+CMakeLists.txt
+
+#sources
+3n+1_Conjecture.cpp
+test.cpp
+check.cpp

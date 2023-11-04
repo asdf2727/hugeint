@@ -1,124 +1,148 @@
 #include "hugeint.h"
 
-// Internals
+#include <vector>
+#include <cmath>
+#include <cstring>
+#include <random>
 
-// Size also works as log2 (gives the biggest bit 1)
-unsigned long long int hugeint::size () const {
-	ullint size = bits.size() << 5;
-	for (uint index = 0x80000000; (index & (neg ? ~bits.back() : bits.back())) == 0; index >>= 1, size--);
+using namespace huge;
+
+// Intermidearies
+
+// Size also works as log2 (gives the number of binary digits, for example 64.size() = 7)
+size_t hugeint::size () const {
+	size_t size = digits.size() * digit_len;
+	if (!digits.empty()) {
+#ifdef HUGEINT_64
+		size -= __builtin_clzll(neg ? ~digits.back() : digits.back());
+#else
+		size -= __builtin_clz(neg ? ~digits.back() : digits.back());
+#endif
+	}
 	return size;
 }
-void hugeint::resize (std::size_t new_size) {
-	std::size_t old_size = bits.size();
-	bits.resize(new_size);
-	if (neg && new_size > old_size) {
-		for (; old_size < new_size; old_size++) {
-			bits[old_size] = 0xffffffff;
-		}
-	}
-}
 void hugeint::clearZeros () {
-	while (!bits.empty() && bits.back() == (neg ? 0xffffffff : 0)) {
-		bits.pop_back();
+	while (!digits.empty() && digits.back() == (neg ? digit_max : 0)) {
+		digits.pop_back();
 	}
 }
 void hugeint::invert () {
-	for (uint &word : bits) {
+	neg = !neg;
+	for (digit_t &word : digits) {
 		word = ~word;
 	}
 }
 void hugeint::negate () {
-	neg = !neg;
 	invert();
 	increment();
+}
+
+bool hugeint::getBit (size_t pos) const {
+	size_t digit_id = pos >> digit_log_len;
+	size_t digit_bit = pos & (digit_len - 1);
+	return (digit_id < digits.size() ? (digits[digit_id] >> digit_bit) & 1 : neg);
+}
+void hugeint::flipBit (size_t pos) {
+	size_t digit_id = pos >> digit_log_len;
+	size_t digit_bit = pos & (digit_len - 1);
+	if (digits.size() <= digit_id) {
+		digits.resize(digit_id + 1, neg ? digit_max : 0);
+	}
+	digits[digit_id] ^= (digit_t)1 << digit_bit;
+}
+void hugeint::setBit (size_t pos, bool val) {
+	if (val ^ getBit(pos)) {
+		flipBit(pos);
+	}
 	clearZeros();
 }
 
-// Explination for the Karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
-bool hugeint::addDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2, bool addlast) {
-	llint rez = 0;
-	for (std::size_t index = 0; index < nr1.size(); index++) {
-		rez += (llint)nr1[index] + (index < nr2.size() ? nr2[index] : 0);
-		nr1[index] = rez;
-		rez >>= 32;
-	}
-	if (addlast) {
-		if (rez != 0) {
-			nr1.push_back(1);
+hugeint hugeint::simpleMult (hugeint &num1, hugeint &num2) {
+	hugeint ans;
+	double_t mult, over = 0, now = 0;
+	for (size_t i = 0; i < num1.digits.size() + num2.digits.size() - 1; i++) {
+		for (size_t j = std::max((size_t)0, i - num1.digits.size()); j < std::min(i + 1, num2.digits.size()); j++) {
+			mult = (double_t)num1.digits[i - j] * num2.digits[j];
+			over += mult >> digit_len;
+			now += mult & digit_max;
 		}
+		ans.digits.push_back(now & digit_max);
+		now >>= digit_len;
+		now += over;
+		over = now >> digit_len;
+		now &= digit_max;
 	}
-	return rez != 0;
-}
-void hugeint::decDeque (std::deque <uint> &nr1, const std::deque <uint> &nr2) {
-	llint rez;
-	for (std::size_t index = 0; index < nr2.size(); index++) {
-		rez = (llint)nr1[index] - nr2[index];
-		if (rez < 0) {
-			nr1[index + 1]--;
-			rez += 0x0000000100000000;
-		}
-		nr1[index] = rez;
+	if (now) {
+		ans.digits.push_back(now);
 	}
+	return ans;
 }
-std::deque <unsigned int> hugeint::karatsuba (std::deque <uint> half11, std::deque <uint> half21, std::size_t tot_size) {
+// Explination for the karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+hugeint hugeint::karatsuba (hugeint &num1, hugeint &num2, size_t tot_size) {
+	hugeint high, mid, low;
+	hugeint &num1_l = num1;
+	hugeint num1_h;
+	hugeint &num2_l = num2;
+	hugeint num2_h;
+	tot_size >>= 1;
+	if (num1.digits.size() > tot_size) {
+		num1_h.resize(tot_size);
+		std::copy(num1.digits.begin() + (size_t)tot_size, num1.digits.end(), num1_h.digits.begin());
+		num1_l.resize(tot_size);
+		num1_l.clearZeros();
+	}
+	if (num2.digits.size() > tot_size) {
+		num2_h.resize(tot_size);
+		std::copy(num2.digits.begin() + (size_t)tot_size, num2.digits.end(), num2_h.digits.begin());
+		num2_l.resize(tot_size);
+		num2_l.clearZeros();
+	}
+	hugeint add1 = num1_l + num1_h;
+	hugeint add2 = num2_l + num2_h;
+	high = doMultAlgorithm(num1_h, num2_h, tot_size);
+	low = doMultAlgorithm(num1_l, num2_l, tot_size);
+
+	mid = -high - low;
+	if (add1.digits.size() > tot_size) {
+		mid += add2 << (tot_size << 5);
+		add1.digits.pop_back();
+	}
+	if (add2.digits.size() > tot_size) {
+		mid += add1 << (tot_size << 5);
+		add2.digits.pop_back();
+	}
+	mid += doMultAlgorithm(add1, add2, tot_size);
+	high <<= tot_size << 5;
+	high += mid;
+	high <<= tot_size << 5;
+	high += low;
+	return high;
+}
+inline hugeint hugeint::doMultAlgorithm (hugeint &num1, hugeint &num2, size_t tot_size) {
+	if (num1.digits.empty() || num2.digits.empty()) {
+		return 0;
+	}
+	while (tot_size && tot_size >> 1 >= std::max(num1.digits.size(), num2.digits.size())) {
+		tot_size >>= 1;
+	}
 	if (tot_size <= 1) {
-		half11.push_back(((ullint)half11[0] * half21[0]) >> 32);
-		half11[0] *= half21[0];
-		return half11;
+		return (double_t)num1.digits[0] * num2.digits[0];
+	}
+	if (num1.digits.size() * num1.digits.size() < num2.digits.size()) {
+		simpleMult(num2, num1);
+	}
+	else if (num2.digits.size() * num2.digits.size() < num1.digits.size()) {
+		simpleMult(num1, num2);
 	}
 	else {
-		std::deque <uint> half12, half22, calc1, calc2, calc3;
-		bool add1, add2;
-		for (std::size_t index = tot_size >> 1; index < tot_size; index++) {
-			half12.push_back(half11[index]);
-			half22.push_back(half21[index]);
-		}
-		tot_size >>= 1;
-		half11.resize(tot_size);
-		half21.resize(tot_size);
-		calc1 = karatsuba(half11, half21, tot_size);
-		calc2 = karatsuba(half12, half22, tot_size);
-		add1 = addDeque(half11, half12, false);
-		add2 = addDeque(half21, half22, false);
-		calc3 = karatsuba(half11, half21, tot_size);
-		if (add1) {
-			for (std::size_t index = 0; index < tot_size; index++) {
-				half21.push_front(0);
-			}
-			addDeque(calc3, half21, true);
-		}
-		if (add2) {
-			for (std::size_t index = 0; index < tot_size; index++) {
-				half11.push_front(0);
-			}
-			addDeque(calc3, half11, true);
-		}
-		if (add1 && add2) {
-			if (calc3.size() < (tot_size << 1) + 1) {
-				calc3.push_back(1);
-			}
-			else {
-				calc3.back()++;
-			}
-		}
-		decDeque(calc3, calc1);
-		decDeque(calc3, calc2);
-		for (std::size_t index = 0; index < tot_size << 1; index++) {
-			calc2.push_front(0);
-		}
-		addDeque(calc2, calc1, false);
-		for (std::size_t index = 0; index < tot_size; index++) {
-			calc3.push_front(0);
-		}
-		addDeque(calc2, calc3, false);
-		return calc2;
+		karatsuba(num1, num2, tot_size);
 	}
 }
 
-unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
-	uint calc = 0;
-	hugeint form, to_add = (to_div << 31);
-	for (uint index = 0x80000000; index > 0; index >>= 1) {
+digit_t hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
+	digit_t calc = 0;
+	hugeint form, to_add = (to_div << (digit_len - 1));
+	for (digit_t index = (digit_t)1 << (digit_len - 1); index > 0; index >>= 1) {
 		if (form + to_add <= rest) {
 			form += to_add;
 			calc += index;
@@ -129,201 +153,177 @@ unsigned int hugeint::divBinSearch (hugeint &rest, const hugeint &to_div) {
 	return calc;
 }
 
-// Publics
+// Used by publics
 bool hugeint::compareSml (const hugeint &to_comp) const {
 	if (neg != to_comp.neg) {
 		return neg;
 	}
-	else if (bits.size() != to_comp.bits.size()) {
-		return neg ^ (bits.size() < to_comp.bits.size());
+	else if (digits.size() != to_comp.digits.size()) {
+		return neg ^ (digits.size() < to_comp.digits.size());
 	}
 	else {
-		for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-			if (bits[index] != to_comp.bits[index]) {
-				return neg ^ (bits[index] < to_comp.bits[index]);
+		for (size_t index = digits.size() - 1; index < digits.size(); index--) {
+			if (digits[index] != to_comp.digits[index]) {
+				return neg ^ (digits[index] < to_comp.digits[index]);
 			}
 		}
 	}
 	return false;
 }
 
-hugeint &hugeint::calculateAnd (const hugeint &to_and) {
-	if (to_and.bits.size() < bits.size()) {
-		resize(to_and.bits.size());
+void hugeint::calculateAnd (const hugeint &to_and) {
+	if (!to_and.neg && digits.size() > to_and.digits.size()) {
+		digits.resize(to_and.digits.size());
 	}
-	for (std::size_t index = 0; index < bits.size(); index++) {
-		bits[index] &= to_and.bits[index];
+	for (size_t index = 0; index < std::min(digits.size(), to_and.digits.size()); index++) {
+		digits[index] &= to_and.digits[index];
+	}
+	if (neg && digits.size() < to_and.digits.size()) {
+		for (size_t index = digits.size(); index < to_and.digits.size(); index++) {
+			digits.push_back(to_and.digits[index]);
+		}
 	}
 	neg = neg && to_and.neg;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateOr (const hugeint &to_or) {
-	if (bits.size() < to_or.bits.size()) {
-		resize(to_or.bits.size());
+void hugeint::calculateOr (const hugeint &to_or) {
+	if (to_or.neg && digits.size() > to_or.digits.size()) {
+		digits.resize(to_or.digits.size());
 	}
-	for (std::size_t index = 0; index < to_or.bits.size(); index++) {
-		bits[index] |= to_or.bits[index];
+	for (size_t index = 0; index < std::min(digits.size(), to_or.digits.size()); index++) {
+		digits[index] |= to_or.digits[index];
 	}
-	if (to_or.neg && to_or.bits.size() < bits.size()) {
-		bits.resize(to_or.bits.size());
+	if (!neg && digits.size() < to_or.digits.size()) {
+		for (size_t index = digits.size(); index < to_or.digits.size(); index++) {
+			digits.push_back(to_or.digits[index]);
+		}
 	}
 	neg = neg || to_or.neg;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateXor (const hugeint &to_xor) {
-	if (bits.size() < to_xor.bits.size()) {
-		resize(to_xor.bits.size());
+void hugeint::calculateXor (const hugeint &to_xor) {
+	if (digits.size() < to_xor.digits.size()) {
+		digits.resize(to_xor.digits.size(), neg ? digit_max : 0);
 	}
-	for (std::size_t index = 0; index < to_xor.bits.size(); index++) {
-		bits[index] ^= to_xor.bits[index];
+	for (size_t index = 0; index < std::min(digits.size(), to_xor.digits.size()); index++) {
+		digits[index] ^= to_xor.digits[index];
 	}
-	if (to_xor.neg && to_xor.bits.size() < bits.size()) {
-		for (std::size_t index = to_xor.bits.size(); index < bits.size(); index++) {
-			bits[index] = ~bits[index];
+	if (to_xor.neg && digits.size() > to_xor.digits.size()) {
+		for (size_t index = to_xor.digits.size(); index < digits.size(); index++) {
+			digits[index] = ~digits[index];
 		}
 	}
-	neg = neg || to_xor.neg;
+	neg = neg ^ to_xor.neg;
 	clearZeros();
-	return *this;
 }
 
-void hugeint::shiftFwd (ullint val) {
-	uint digadd = val >> 5;
-	uint bitshift = val % 32;
-	if (bitshift) {
-		bits.push_back(0);
-		for (std::size_t index = bits.size() - 1; index > 0; index--) {
-			bits[index] = (bits[index] << bitshift) + (bits[index - 1] >> (32 - bitshift));
-		}
-		bits[0] = bits[0] << bitshift;
-		if (bits.back() == 0) {
-			bits.pop_back();
-		}
+void hugeint::shiftFwd (size_t val) {
+	size_t digit_move = val >> digit_log_len;
+	size_t bit_shift = val & (digit_len - 1);
+	digits.resize(digits.size() + digit_move + 1);
+	for (size_t index = digits.size() - 1; index > digit_move; index--) {
+		digits[index] = (digits[index - digit_move] << bit_shift) | (digits[index - digit_move - 1] >> (digit_len - bit_shift));
 	}
-	for (uint index = 0; index < digadd; bits.push_front(0), index++);
+	digits[digit_move] = digits[0] << bit_shift;
+	if (digit_move) {
+		std::memset(&digits.front(), 0x00, sizeof(digit_t) * digit_move);
+	}
+	if (digits.back() == 0) {
+		digits.pop_back();
+	}
 }
-void hugeint::shiftBack (ullint val) {
-	uint digdel = val >> 5;
-	uint bitshift = val % 32;
-	for (uint index = 0; !bits.empty() && index < digdel; bits.pop_front(), index++);
-	if (!bits.empty() && bitshift) {
-		for (std::size_t index = 0; index < bits.size() - 1; index++) {
-			bits[index] = (bits[index] >> bitshift) + (bits[index + 1] << (32 - bitshift));
-		}
-		bits.back() = bits.back() >> bitshift;
-		if (bits.back() == 0) {
-			bits.pop_back();
-		}
+void hugeint::shiftBack (size_t val) {
+	size_t digit_move = val >> digit_log_len;
+	size_t bit_shift = val & (digit_len - 1);
+	digits.resize(digits.size() - digit_move);
+	for (size_t index = 0; index < digits.size() - 1; index++) {
+		digits[index] = (digits[index + digit_move] >> bit_shift) | (digits[index + digit_move + 1] << (digit_len - bit_shift));
+	}
+	digits.back() = digits[digits.size() - 1 + digit_move] >> bit_shift;
+	if (digits.back() == 0) {
+		digits.pop_back();
 	}
 }
 
-hugeint &hugeint::increment () {
-	if (neg && bits.empty()) {
-		bits.clear();
+void hugeint::increment () {
+	if (neg && digits.empty()) {
 		neg = false;
+		return;
 	}
-	else {
-		if (!neg) {
-			bits.push_back(0);
+	for (digit_t &word : digits) {
+		if (word == digit_max) {
+			word = 0;
 		}
-		for (uint &word : bits) {
-			if (word == 0xffffffff) {
-				word = 0;
-			}
-			else {
-				word++;
-				break;
-			}
+		else {
+			word++;
+			clearZeros();
+			return;
 		}
-		clearZeros();
 	}
-	return *this;
+	digits.push_back(1);
 }
-hugeint &hugeint::decrement () {
-	if (!neg && bits.empty()) {
-		bits.clear();
+void hugeint::decrement () {
+	if (!neg && digits.empty()) {
 		neg = true;
+		return;
 	}
-	else {
-		if (neg) {
-			bits.push_back(0xffffffff);
+	for (digit_t &word : digits) {
+		if (word == 0) {
+			word = digit_max;
 		}
-		for (uint &word : bits) {
-			if (word == 0) {
-				word = 0xffffffff;
-			}
-			else {
-				word--;
-				break;
-			}
+		else {
+			word--;
+			clearZeros();
+			return;
 		}
-		clearZeros();
 	}
-	return *this;
+	digits.push_back(digit_max - 1);
 }
 
-hugeint &hugeint::calculateAdd (const hugeint &to_add) {
-	ullint sav = 0;
-	resize(std::max(bits.size(), to_add.bits.size()) + 1);
-	for (std::size_t index = 0; index < bits.size(); index++) {
-		if (index >= to_add.bits.size() && !to_add.neg && sav == 0) {
+void hugeint::calculateAdd (const hugeint &to_add) {
+	size_t sav = 0;
+	if (digits.size() < to_add.digits.size()) {
+		digits.resize(to_add.digits.size(), neg ? digit_max : 0);
+	}
+	for (size_t index = 0; index < digits.size(); index++) {
+		if (index >= to_add.digits.size() && !to_add.neg && sav == 0) {
 			break;
 		}
-		sav += (ullint)bits[index] + (index < to_add.bits.size() ? to_add.bits[index] : (to_add.neg ? 0xffffffff : 0));
-		bits[index] = (uint)sav;
+		sav += (ullint)digits[index] + (index < to_add.digits.size() ? to_add.digits[index] : (to_add.neg ? 0xffffffff : 0));
+		digits[index] = (uint)sav;
 		sav >>= 32;
 	}
-	neg = bits.back() & 0x80000000;
+	neg = digits.back() & 0x80000000;
 	clearZeros();
-	return *this;
 }
-hugeint &hugeint::calculateDec (const hugeint &to_dec) {
+void hugeint::calculateDec (const hugeint &to_dec) {
 	ullint sav = 0;
-	resize(std::max(bits.size(), to_dec.bits.size()) + 1);
-	for (std::size_t index = 0; index < bits.size(); index++) {
-		if (index >= to_dec.bits.size() && !to_dec.neg && sav == 0) {
+	resize(std::max(digits.size(), to_dec.digits.size()) + 1);
+	for (size_t index = 0; index < digits.size(); index++) {
+		if (index >= to_dec.digits.size() && !to_dec.neg && sav == 0) {
 			break;
 		}
-		sav += (ullint)bits[index] - (index < to_dec.bits.size() ? to_dec.bits[index] : (to_dec.neg ? 0xffffffff : 0));
-		bits[index] = (uint)sav;
+		sav += (ullint)digits[index] - (index < to_dec.digits.size() ? to_dec.digits[index] : (to_dec.neg ? 0xffffffff : 0));
+		digits[index] = (uint)sav;
 		sav = (sav & 0xffffffff00000000) + (sav >> 32); // keep the negative for carry
 	}
-	neg = bits.back() & 0x80000000;
+	neg = digits.back() & 0x80000000;
 	clearZeros();
-	return *this;
 }
 
-hugeint &hugeint::calculateMult (const hugeint &to_mult) {
+void hugeint::calculateMult (const hugeint &to_mult) {
 	bool is_neg = neg ^ to_mult.neg;
-	if (neg) {
-		negate();
-	}
-	std::deque <uint> num1, num2;
-	int max_size = 0;
-	num1 = bits;
-	if (to_mult.neg) {
-		auto *negated = new hugeint(to_mult);
-		negated->negate();
-		num2 = negated->bits;
-		delete negated;
-	}
-	else {
-		num2 = to_mult.bits;
-	}
-	for (max_size = 1; max_size < std::max(num1.size(), num2.size()); max_size <<= 1);
-	num1.resize(max_size);
-	num2.resize(max_size);
-	bits = karatsuba(num1, num2, max_size);
-	clearZeros();
-	if (is_neg) {
-		negate();
-	}
-	return *this;
+	hugeint &num1 = *this;
+	num1.abs();
+	hugeint num2 = huge::abs(to_mult);
+	size_t max_size = 1ull << ((sizeof(size_t) << 3) - __builtin_clzll(num1.digits.size() | num2.digits.size() | 1));
+	num1 = is_neg ? -doMultAlgorithm(num1, num2, max_size) : doMultAlgorithm(num1, num2, max_size);
 }
 
-hugeint &hugeint::calculateDiv (const hugeint &to_div) {
+void hugeint::calculateDiv (const hugeint &to_div) {
+	if (!to_div.neg && to_div.digits.empty()) {
+		throw (std::invalid_argument("Division by 0"));
+	}
 	hugeint ans, rest;
 	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
@@ -338,9 +338,11 @@ hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		rest.bits.push_front(bits[index]);
-		ans.bits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
+	for (std::deque <uint>::const_reverse_iterator pos = digits.rbegin(); pos != digits.rend(); pos++) {
+		if (!rest.digits.empty() || *pos) {
+			rest.digits.push_front(*pos);
+		}
+		ans.digits.push_front(*calc <= rest ? divBinSearch(rest, *calc) : 0);
 	}
 	if (to_div.neg) {
 		delete calc;
@@ -348,9 +350,9 @@ hugeint &hugeint::calculateDiv (const hugeint &to_div) {
 	if (is_neg) {
 		ans.negate();
 	}
-	return *this = ans;
+	*this = ans;
 }
-hugeint &hugeint::calculateMod (const hugeint &to_div) {
+void hugeint::calculateMod (const hugeint &to_div) {
 	hugeint rest;
 	bool is_neg = neg ^ to_div.neg;
 	if (neg) {
@@ -365,10 +367,12 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	else {
 		calc = &to_div;
 	}
-	for (std::size_t index = bits.size() - 1; index < bits.size(); index--) {
-		rest.bits.push_front(bits[index]);
-		if (*calc <= rest) {
-			divBinSearch(rest, *calc);
+	for (std::deque <uint>::const_reverse_iterator pos = digits.rbegin(); pos != digits.rend(); pos++) {
+		if (!rest.digits.empty() || *pos) {
+			rest.digits.push_front(*pos);
+			if (*calc <= rest) {
+				divBinSearch(rest, *calc);
+			}
 		}
 	}
 	if (to_div.neg) {
@@ -377,28 +381,82 @@ hugeint &hugeint::calculateMod (const hugeint &to_div) {
 	if (is_neg) {
 		rest.negate();
 	}
-	return *this = rest;
+	*this = rest;
 }
 
-hugeint hugeint::calculatePow (ullint exponent) {
-	hugeint result = 1;
-	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
-		if (exponent & bit) {
-			result *= *this;
-		}
-		*this *= *this;
+void hugeint::setRamdon (size_t size, bool rand_sign) {
+	std::default_random_engine generator;
+	std::uniform_int_distribution <uint> distribution(0, 0xffffffff);
+	auto randomDigit = std::bind(distribution, generator);
+	neg = rand_sign && (randomDigit() & 1);
+	digits.clear();
+	for (int index = 0; index < size >> 5; index++) {
+		digits.push_back(randomDigit());
 	}
-	return *this = result;
+	if (size & 31) {
+		digits.push_back(randomDigit() & ((1ull << (size & 0x1f)) - 1));
+	}
+	if (neg) {
+		digits.back() = ~digits.back();
+	}
+	clearZeros();
 }
-hugeint hugeint::calculateModPow (ullint exponent, const hugeint &to_div) {
-	hugeint result = 1;
-	for (ullint bit = 1; bit <= exponent; bit <<= 1) {
-		if (exponent & bit) {
-			result *= *this;
-			result %= to_div;
-		}
-		*this *= *this;
-		*this %= to_div;
+
+void hugeint::calculateGcd (hugeint other) {
+	hugeint rest;
+	while (other) {
+		rest = (*this) % other;
+		*this = other;
+		other = rest;
 	}
-	return *this = result;
+}
+
+void hugeint::calculatePow (ullint exponent) {
+	if (exponent == 0) {
+		neg = false;
+		digits.clear();
+		digits.push_back(1);
+		return;
+	}
+	while (!(exponent & 1) && exponent) {
+		exponent >>= 1;
+		calculateMult(*this);
+	}
+	hugeint power = *this;
+	exponent >>= 1;
+	while (exponent) {
+		power *= power;
+		if (exponent & 1) {
+			calculateMult(power);
+		}
+		exponent >>= 1;
+	}
+}
+void hugeint::calculatePow (ullint exponent, const hugeint &to_mod) {
+	while (!(exponent & 1) && exponent) {
+		exponent >>= 1;
+		calculateMult(*this);
+	}
+	hugeint power = *this;
+	exponent >>= 1;
+	while (exponent) {
+		power *= power;
+		power %= to_mod;
+		if (exponent & 1) {
+			calculateMult(power);
+			calculateMod(to_mod);
+		}
+		exponent >>= 1;
+	}
+}
+
+hugeint hugeint::calculateNthRoot (ullint degree) const {
+	hugeint ans;
+	for (size_t pos = size() / degree; size() / degree; pos--) {
+		ans.flipBit(pos);
+		if (huge::pow(ans, degree) > *this) {
+			ans.flipBit(pos);
+		}
+	}
+	return ans;
 }
