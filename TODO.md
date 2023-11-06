@@ -27,19 +27,21 @@ Get ideas form other implementations like this one: https://faheel.github.io/Big
 ### faster algorithms:
 
 - general hardware optimizations
-    - [ ] implement 64 bit numbers
-    - use std::vector cuz it's faster
-- adition and subtraction
-    - [ ] do a separate function for hugeint + ullint
+	- [x] implement 64 bit numbers
+	- [x] use std::vector cuz it's faster
+	- [ ] negate values instead of creating copy even if value is const reference
 - decimal to hex and inverse casting
-    - [ ] divide and conquer
+	- [ ] divide and conquer (does it even work?)
 - division
-    - [ ] see if there even is an algorithm
+	- [ ] look over these:
+		- https://en.wikipedia.org/wiki/Division_algorithm#Newton%E2%80%93Raphson_division
+		- https://en.wikipedia.org/wiki/Barrett_reduction
+		- https://en.wikipedia.org/wiki/Montgomery_modular_multiplication
+		- https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.47.565&rep=rep1&type=pdf
 - multiplication
-    - [ ] do a separate function for hugeint * int
-    - [x] add simple multiplication for small * big
-    - [ ] if you have any sanity left try
-      Schonhage-Strassen: https://en.wikipedia.org/wiki/Sch%C3%B6nhage%E2%80%93Strassen_algorithm
+	- [x] add simple multiplication for small * big
+	- [ ] rewrite karatsuba to use pointer realoc instead of mem copy
+	- [ ] if you have any sanity left try Schonhage-Strassen: https://en.wikipedia.org/wiki/Sch%C3%B6nhage%E2%80%93Strassen_algorithm
 
 ### to test:
 

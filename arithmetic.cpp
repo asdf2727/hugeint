@@ -7,6 +7,8 @@
 
 #define L_TO_R_POWER
 
+using namespace huge;
+
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
 	std::chrono::duration <double> time;

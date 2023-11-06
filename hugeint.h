@@ -9,13 +9,8 @@ namespace huge {
 
 #define NOT_HUGEINT_TEMP template <typename NotHugeint, typename = std::enable_if <!std::is_same <NotHugeint, hugeint>::value>>
 
-	typedef uint64_t size_t;
-	typedef uint64_t shift_t;
-	typedef uint64_t exp_t;
-	typedef uint64_t root_t;
-
 // #define DIGIT_64 // Uncomment this to enable manual 64 bit digit size
-#define DIGIT_32 // Uncomment this to enable manual 32 bit digit size
+// #define DIGIT_32 // Uncomment this to enable manual 32 bit digit size
 
 #ifndef DIGIT_64
 #ifndef DIGIT_32
@@ -29,18 +24,23 @@ namespace huge {
 
 #ifdef DIGIT_64
 	typedef uint64_t digit_t;
-	static const int digit_len = 64;
-	static const int digit_log_len = 6;
-	static const digit_t digit_max = 0xffffffffffffffff;
+	const int digit_len = 64;
+	const int digit_log_len = 6;
+	const digit_t digit_max = 0xffffffffffffffff;
 	typedef unsigned __int128 double_t;
 #endif
 #ifdef DIGIT_32
 	typedef uint32_t digit_t;
-	static const int digit_len = 32;
-	static const int digit_log_len = 5;
-	static const digit_t digit_max = 0xffffffff;
+	const int digit_len = 32;
+	const int digit_log_len = 5;
+	const digit_t digit_max = 0xffffffff;
 	typedef uint64_t double_t;
 #endif
+
+	typedef uint64_t size_t;
+	typedef uint64_t shift_t;
+	typedef uint64_t exp_t;
+	typedef uint64_t root_t;
 
 	class hugeint {
 	private:
@@ -67,9 +67,6 @@ namespace huge {
 		std::string toOct () const;
 		// Returns a string in binary equal to self.
 		std::string toBin () const;
-
-		friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
-		friend std::istream &operator>> (std::istream &in, hugeint &to_set);
 
 		hugeint ();
 		hugeint (hugeint &&to_copy) noexcept;
@@ -114,7 +111,7 @@ namespace huge {
 		explicit operator int32_t () const;
 		explicit operator uint32_t () const;
 		explicit operator int64_t () const;
-		explicit operator uint64_t () const;
+		operator uint64_t () const;
 #ifdef DIGIT_64
 		explicit operator __int128 () const;
 		explicit operator unsigned __int128 () const;
@@ -122,16 +119,12 @@ namespace huge {
 		explicit operator float () const;
 		explicit operator double () const;
 		explicit operator std::string () const;
-		explicit operator const char * () const;
 
 		// Mathematical functions
 	private:
-		void clearZeros ();
-		void invert ();
-
-		hugeint simpleMult (hugeint &num1, hugeint &num2);
-		hugeint karatsuba (hugeint &num1, hugeint &num2, size_t tot_size);
-		inline hugeint doMultAlgorithm (hugeint &num1, hugeint &num2, size_t tot_size);
+		inline void clearZeros ();
+		inline void invert ();
+		inline void resize (size_t new_size);
 
 		bool compareSml (const hugeint &to_comp) const;
 
@@ -145,9 +138,11 @@ namespace huge {
 		void increment ();
 		void decrement ();
 
-		void calculateAdd (const hugeint &to_and);
-		void calculateDec (const hugeint &to_dec);
+		void calculateAdd (const hugeint &to_and, bool negate = false);
 
+		static hugeint simpleMult (hugeint &num1, hugeint &num2);
+		hugeint karatsuba (hugeint &num1, hugeint &num2, size_t tot_size);
+		inline hugeint doMultAlgorithm (hugeint &num1, hugeint &num2, size_t tot_size);
 		void calculateMult (const hugeint &to_mult);
 
 		digit_t divBinSearch (hugeint &rest, const hugeint &to_div);
@@ -161,14 +156,14 @@ namespace huge {
 		void calculatePow (exp_t exponent);
 		void calculatePow (exp_t exponent, const hugeint &to_mod);
 
-		void calculateNthRoot (root_t degree) const;
+		void calculateNthRoot (root_t degree);
 	public:
-		size_t size () const;
-		void negate ();
+		inline size_t size () const;
+		inline void negate ();
 
-		bool getBit (size_t pos) const;
-		void flipBit (size_t pos);
-		void setBit (size_t pos, bool val);
+		inline bool getBit (size_t pos) const;
+		inline void flipBit (size_t pos);
+		inline void setBit (size_t pos, bool val);
 
 		friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
 			return lhs.digits == rhs.digits && lhs.neg == rhs.neg;
@@ -431,11 +426,11 @@ namespace huge {
 		}
 
 		friend hugeint &operator-= (hugeint &lhs, const hugeint &rhs) {
-			lhs.calculateDec(rhs);
+			lhs.calculateAdd(rhs, true);
 			return lhs;
 		}
 		NOT_HUGEINT_TEMP friend hugeint &operator-= (hugeint &lhs, const NotHugeint &rhs) {
-			lhs.calculateDec((hugeint)rhs);
+			lhs.calculateAdd((hugeint)rhs, true);
 			return lhs;
 		}
 		NOT_HUGEINT_TEMP friend NotHugeint &operator-= (NotHugeint &lhs, const hugeint &rhs) {
@@ -450,17 +445,17 @@ namespace huge {
 
 		friend hugeint operator- (const hugeint &lhs, const hugeint &rhs) {
 			hugeint result(lhs);
-			result.calculateDec(rhs);
+			result.calculateAdd(rhs, true);
 			return result;
 		}
 		NOT_HUGEINT_TEMP friend hugeint operator- (const hugeint &lhs, const NotHugeint &rhs) {
 			hugeint result(lhs);
-			result.calculateDec((hugeint)rhs);
+			result.calculateAdd((hugeint)rhs, true);
 			return result;
 		}
 		NOT_HUGEINT_TEMP friend NotHugeint operator- (const NotHugeint &lhs, const hugeint &rhs) {
 			hugeint result(lhs);
-			result.calculateDec(rhs);
+			result.calculateAdd(rhs, true);
 			return result;
 		}
 
@@ -595,11 +590,22 @@ namespace huge {
 		}
 	};
 
-	hugeint pow (hugeint base, exp_t exponent) {
+	inline std::ostream &operator<< (std::ostream &out, hugeint &to_show) {
+		out << (std::string)to_show;
+		return out;
+	}
+	inline std::istream &operator>> (std::istream &in, hugeint &to_set) {
+		std::string input_string;
+		in >> input_string;
+		to_set.fromString(input_string.begin(), input_string.end());
+		return in;
+	}
+
+	inline hugeint pow (hugeint base, exp_t exponent) {
 		base.pow(exponent);
 		return base;
 	}
-	hugeint pow (hugeint base, exp_t exponent, const hugeint &modulo) {
+	inline hugeint pow (hugeint base, exp_t exponent, const hugeint &modulo) {
 		base.pow(exponent, modulo);
 		return base;
 	}
@@ -634,5 +640,4 @@ namespace huge {
 	}
 
 #undef NOT_HUGEINT_TEMP
-
 }

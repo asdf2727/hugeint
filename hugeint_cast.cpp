@@ -2,8 +2,6 @@
 
 using namespace huge;
 
-// Internals
-
 void hugeint::fromHex (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos) {
 	for (std::string::const_iterator pos = begin; pos != end; pos++, errPos++) {
 		if (*pos == '\'' || *pos == ' ') {
@@ -15,7 +13,7 @@ void hugeint::fromHex (const std::string::const_iterator &begin, const std::stri
 	}
 	errPos = -1;
 
-	ullint form = 0;
+	double_t form = 0;
 	std::size_t index = 0;
 	digits.clear();
 	neg = false;
@@ -25,22 +23,22 @@ void hugeint::fromHex (const std::string::const_iterator &begin, const std::stri
 			continue;
 		}
 		if ('0' <= *pos && *pos <= '9') {
-			form |= ((llint)(*pos - '0')) << index;
+			form |= ((double_t)(*pos - '0')) << index;
 		}
 		else if ('a' <= *pos && *pos <= 'f') {
-			form |= ((llint)(*pos - 'a' + 10)) << index;
+			form |= ((double_t)(*pos - 'a' + 10)) << index;
 		}
 		else {
-			form |= ((llint)(*pos - 'A' + 10)) << index;
+			form |= ((double_t)(*pos - 'A' + 10)) << index;
 		}
 		index += 4;
-		if (index >= 32) {
-			index -= 32;
-			digits.push_back((uint)form);
-			form >>= 32;
+		if (index >= digit_len) {
+			index -= digit_len;
+			digits.push_back(form);
+			form >>= digit_len;
 		}
 	}
-	digits.push_back((uint)form);
+	digits.push_back(form);
 	clearZeros();
 }
 void hugeint::fromDec (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos) {
@@ -75,7 +73,7 @@ void hugeint::fromOct (const std::string::const_iterator &begin, const std::stri
 	}
 	errPos = -1;
 
-	ullint form = 0;
+	double_t form = 0;
 	std::size_t index = 0;
 	digits.clear();
 	neg = false;
@@ -84,15 +82,15 @@ void hugeint::fromOct (const std::string::const_iterator &begin, const std::stri
 		if (*pos == '\'' || *pos == ' ') {
 			continue;
 		}
-		form |= ((llint)(*pos - '0')) << index;
+		form |= ((double_t)(*pos - '0')) << index;
 		index += 3;
-		if (index >= 32) {
-			index -= 32;
-			digits.push_back((uint)form);
-			form >>= 32;
+		if (index >= digit_len) {
+			index -= digit_len;
+			digits.push_back(form);
+			form >>= digit_len;
 		}
 	}
-	digits.push_back((uint)form);
+	digits.push_back(form);
 	clearZeros();
 }
 void hugeint::fromBin (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos) {
@@ -106,7 +104,7 @@ void hugeint::fromBin (const std::string::const_iterator &begin, const std::stri
 	}
 	errPos = -1;
 
-	ullint form = 0;
+	double_t form = 0;
 	std::size_t index = 0;
 	digits.clear();
 	neg = false;
@@ -115,97 +113,95 @@ void hugeint::fromBin (const std::string::const_iterator &begin, const std::stri
 		if (*pos == '\'' || *pos == ' ') {
 			continue;
 		}
-		form |= ((llint)(*pos - '0')) << index;
+		form |= ((double_t)(*pos - '0')) << index;
 		index += 1;
-		if (index >= 32) {
-			index -= 32;
-			digits.push_back((uint)form);
-			form >>= 32;
+		if (index >= digit_len) {
+			index -= digit_len;
+			digits.push_back(form);
+			form >>= digit_len;
 		}
 	}
-	digits.push_back((uint)form);
+	digits.push_back(form);
 	clearZeros();
 }
 
-// Publics
-
 size_t hugeint::fromString (std::string::const_iterator begin, std::string::const_iterator end) {
-	bool isNeg = false;
-	size_t errPos = -1;
+	bool is_neg = false;
+	size_t err_pos = -1;
 	while (begin != end && (*begin == '+' || *begin == '-')) {
-		isNeg ^= (*begin == '-');
+		is_neg ^= (*begin == '-');
 		begin++;
-		errPos++;
+		err_pos++;
 	}
 	if (begin == end) {
 		digits.clear();
 		neg = false;
 		return -1;
 	}
-	else if (*begin == '0') {
+	if (*begin == '0') {
 		begin++;
 		if (*begin == 'x' || *begin == 'X') {
-			errPos += 2;
-			fromHex(++begin, end, errPos);
+			err_pos += 2;
+			fromHex(++begin, end, err_pos);
 		}
 		else if (*begin == 'd' || *begin == 'D') {
-			errPos += 2;
-			fromDec(++begin, end, errPos);
+			err_pos += 2;
+			fromDec(++begin, end, err_pos);
 		}
 		else if (*begin == 'o' || *begin == 'O') {
-			errPos += 2;
-			fromOct(++begin, end, errPos);
+			err_pos += 2;
+			fromOct(++begin, end, err_pos);
 		}
 		else if (*begin == 'b' || *begin == 'B') {
-			errPos += 2;
-			fromBin(++begin, end, errPos);
+			err_pos += 2;
+			fromBin(++begin, end, err_pos);
 		}
 		else {
-			errPos++;
-			fromOct(begin, end, errPos);
+			err_pos++;
+			fromOct(begin, end, err_pos);
 		}
 	}
 	else if (*begin == 'x' || *begin == 'X') {
-		errPos++;
-		fromHex(++begin, end, errPos);
+		err_pos++;
+		fromHex(++begin, end, err_pos);
 	}
 	else if (*begin == 'd' || *begin == 'D') {
-		errPos++;
-		fromDec(++begin, end, errPos);
+		err_pos++;
+		fromDec(++begin, end, err_pos);
 	}
 	else if (*begin == 'o' || *begin == 'O') {
-		errPos++;
-		fromOct(++begin, end, errPos);
+		err_pos++;
+		fromOct(++begin, end, err_pos);
 	}
 	else if (*begin == 'b' || *begin == 'B') {
-		errPos++;
-		fromBin(++begin, end, errPos);
+		err_pos++;
+		fromBin(++begin, end, err_pos);
 	}
 	else {
 		end--;
 		if (*end == 'x' || *end == 'X') {
-			fromHex(begin, end, errPos);
+			fromHex(begin, end, err_pos);
 		}
 		else if (*end == 'd' || *end == 'D') {
-			fromDec(begin, end, errPos);
+			fromDec(begin, end, err_pos);
 		}
 		else if (*end == 'o' || *end == 'O') {
-			fromOct(begin, end, errPos);
+			fromOct(begin, end, err_pos);
 		}
 		else if (*end == 'b' || *end == 'B') {
-			fromBin(begin, end, errPos);
+			fromBin(begin, end, err_pos);
 		}
 		else if ('0' <= *end && *end <= '9') {
-			fromDec(begin, ++end, errPos);
+			fromDec(begin, ++end, err_pos);
 		}
 		else {
-			errPos = end - begin;
+			err_pos = end - begin;
 		}
 	}
-	if (errPos == -1 && isNeg) {
+	if (err_pos == -1 && is_neg) {
 		negate();
 	}
-	return errPos;
+	return err_pos;
 }
 
 std::string hugeint::toHex () const {
@@ -217,9 +213,9 @@ std::string hugeint::toHex () const {
 		ans = "-0x";
 	}
 	bool first0 = true;
-	uint to_push;
-	for (std::deque <uint>::const_reverse_iterator pos = calc->digits.rbegin(); pos != calc->digits.rend(); pos++) {
-		for (int bit = 28; bit >= 0; bit -= 4) {
+	digit_t to_push;
+	for (std::vector <digit_t>::const_reverse_iterator pos = calc->digits.rbegin(); pos != calc->digits.rend(); pos++) {
+		for (int bit = digit_len - 4; bit >= 0; bit -= 4) {
 			to_push = (*pos >> bit) & 15;
 			if (first0 && to_push == 0) {
 				continue;
@@ -252,11 +248,11 @@ std::string hugeint::toDec () const {
 	if (neg) {
 		calc = new hugeint(-*this);
 	}
-	std::string ans = "";
-	ans.reserve(digits.size() * 9633 / 1000 + 5); // container size multiplied by 32 * ln2 / ln10 to estimate final size
+	std::string ans;
+	ans.reserve(digits.size() * digit_len * 30103 / 100000 + 5); // digit count multiplied by log10(2) to estimate final size
 	ans.push_back(0);
-	for (std::deque <uint>::const_reverse_iterator chunk = calc->digits.rbegin(); chunk != calc->digits.rend(); chunk++) {
-		for (uint pos = 0x80000000; pos > 0; pos >>= 1) {
+	for (std::vector <digit_t>::const_reverse_iterator chunk = calc->digits.rbegin(); chunk != calc->digits.rend(); chunk++) {
+		for (digit_t pos = (digit_t)1 << (digit_len - 1); pos > 0; pos >>= 1) {
 			//Multiply by 2
 			for (char &val : ans) {
 				val <<= 1;
@@ -292,24 +288,24 @@ std::string hugeint::toDec () const {
 }
 std::string hugeint::toOct () const {
 	std::string ans = "o";
-	ans.reserve(digits.size() * 32 / 3 + 1);
+	ans.reserve(digits.size() * digit_len / 3 + 1);
 	const hugeint *calc = this;
 	if (neg) {
 		calc = new hugeint(-*this);
 		ans = "-o";
 	}
 	bool first0 = true;
-	ullint form = 0;
+	double_t form = 0;
 	int count = calc->digits.size() % 3 - 3;
-	uint to_push;
-	std::deque <uint>::const_reverse_iterator chunk = calc->digits.rbegin();
+	digit_t to_push;
+	std::vector <digit_t>::const_reverse_iterator chunk = calc->digits.rbegin();
 	while (true) {
 		if (count < 0) {
 			if (chunk == calc->digits.rend()) {
 				break;
 			}
-			form = (form << 32) | *chunk++;
-			count += 32;
+			form = (form << digit_len) | *chunk++;
+			count += digit_len;
 		}
 		to_push = (form >> count) & 7;
 		count -= 3;
@@ -333,16 +329,16 @@ std::string hugeint::toOct () const {
 	return ans;
 }
 std::string hugeint::toBin () const {
-	std::string ans = "";
-	ans.reserve(digits.size() * 32 / 3 + 1);
+	std::string ans;
+	ans.reserve(digits.size() * digit_len / 3 + 1);
 	const hugeint *calc = this;
 	if (neg) {
 		calc = new hugeint(-*this);
 		ans = "-";
 	}
 	bool first0 = true;
-	uint to_push;
-	for (std::deque <uint>::const_reverse_iterator pos = calc->digits.rbegin(); pos != calc->digits.rend(); pos++) {
+	digit_t to_push;
+	for (std::vector <digit_t>::const_reverse_iterator pos = calc->digits.rbegin(); pos != calc->digits.rend(); pos++) {
 		for (int bit = 31; bit >= 0; bit--) {
 			to_push = (*pos >> bit) & 1;
 			if (first0 && to_push == 0) {
@@ -367,17 +363,6 @@ std::string hugeint::toBin () const {
 	return ans;
 }
 
-std::ostream &operator<< (std::ostream &out, const hugeint &to_show) {
-	out << (std::string)to_show;
-	return out;
-}
-std::istream &operator>> (std::istream &in, hugeint &to_set) {
-	std::string input_string;
-	in >> input_string;
-	to_set.fromString(input_string.begin(), input_string.end());
-	return in;
-}
-
 hugeint::hugeint () {
 	digits.clear();
 	neg = false;
@@ -392,72 +377,83 @@ hugeint::hugeint (bool to_copy) {
 		digits.push_back(1);
 	}
 }
-hugeint::hugeint (sint to_copy) {
-	bool copy_neg = false;
+hugeint::hugeint (int16_t to_copy) {
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
 	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
-	if (to_copy) {
-		digits.push_back(to_copy);
-	}
-	if (copy_neg) {
 		negate();
 	}
 }
-hugeint::hugeint (int to_copy) {
-	bool copy_neg = false;
+hugeint::hugeint (uint16_t to_copy) {
+	neg = false;
+	digits.push_back(to_copy);
+	clearZeros();
+}
+hugeint::hugeint (int32_t to_copy) {
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
 	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
-	if (to_copy) {
-		digits.push_back(to_copy);
-	}
-	if (copy_neg) {
 		negate();
 	}
 }
-hugeint::hugeint (llint to_copy) {
-	bool copy_neg = false;
+hugeint::hugeint (uint32_t to_copy) {
+	neg = false;
+	digits.push_back(to_copy);
+	clearZeros();
+}
+#ifdef DIGIT_32
+hugeint::hugeint (int64_t to_copy) {
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	digits.push_back((neg ? -to_copy : to_copy) >> digit_len);
+	clearZeros();
 	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
-	if (to_copy) {
-		digits.push_back((uint)(to_copy & 0x00000000ffffffff));
-		to_copy <<= 32;
-		if (to_copy) {
-			digits.push_back(to_copy);
-		}
-	}
-	if (copy_neg) {
 		negate();
 	}
 }
-hugeint::hugeint (usint to_copy) {
-	if (to_copy) {
-		digits.push_back(to_copy);
+hugeint::hugeint (uint64_t to_copy) {
+	neg = false;
+	digits.push_back(to_copy);
+	digits.push_back(to_copy >> digit_len);
+	clearZeros();
+}
+#endif
+#ifdef DIGIT_64
+hugeint::hugeint (int64_t to_copy) {
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
+	if (to_copy < 0) {
+		negate();
 	}
 }
-hugeint::hugeint (uint to_copy) {
-	if (to_copy) {
-		digits.push_back(to_copy);
+hugeint::hugeint (uint64_t to_copy) {
+	neg = false;
+	digits.push_back(to_copy);
+	clearZeros();
+}
+hugeint::hugeint (__int128 to_copy) {
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	digits.push_back((neg ? -to_copy : to_copy) >> digit_len);
+	clearZeros();
+	if (to_copy < 0) {
+		negate();
 	}
 }
-hugeint::hugeint (ullint to_copy) {
-	if (to_copy) {
-		digits.push_back((uint)to_copy);
-		to_copy >>= 32;
-		if (to_copy) {
-			digits.push_back(to_copy);
-		}
-	}
+hugeint::hugeint (unsigned __int128 to_copy) {
+	neg = false;
+	digits.push_back(to_copy);
+	digits.push_back(to_copy >> digit_len);
+	clearZeros();
 }
+#endif
 hugeint::hugeint (float to_copy) {
-	uint val = *(uint *)(&to_copy);
-	uint shift = ((val & 0x7f800000) >> 23) - 150;
-	digits.push_back((val & 0x007fffff) | 0x00800000);
+	uint32_t val = *(uint32_t *)(&to_copy);
+	uint32_t shift = ((val & 0x7f800000) >> 23) - 150;
+	*this = (val & 0x007fffff) | 0x00800000;
 	*this <<= shift;
 	clearZeros();
 	if (val & 0x80000000) {
@@ -465,10 +461,9 @@ hugeint::hugeint (float to_copy) {
 	}
 }
 hugeint::hugeint (double to_copy) {
-	ullint val = *(ullint *)(&to_copy);
-	uint shift = ((val & 0x7ff0000000000000) >> 52) - 1075;
-	digits.push_back(val & 0x00000000ffffffff);
-	digits.push_back(((val & 0x000fffff00000000) >> 32) | 0x00100000);
+	uint64_t val = *(uint64_t *)(&to_copy);
+	uint64_t shift = ((val & 0x7ff0000000000000) >> 52) - 1075;
+	*this = (val & 0x000fffffffffffff) | 0x0010000000000000;
 	*this <<= shift;
 	clearZeros();
 	if (val & 0x8000000000000000) {
@@ -496,92 +491,104 @@ hugeint &hugeint::operator= (bool to_copy) {
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (sint to_copy) {
-	bool copy_neg = false;
-	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
+hugeint &hugeint::operator= (int16_t to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back(to_copy);
-	}
-	if (copy_neg) {
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
+	if (to_copy < 0) {
 		negate();
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (int to_copy) {
-	bool copy_neg = false;
-	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
+hugeint &hugeint::operator= (uint16_t to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back(to_copy);
-	}
-	if (copy_neg) {
+	digits.push_back(to_copy);
+	clearZeros();
+	return *this;
+}
+hugeint &hugeint::operator= (int32_t to_copy) {
+	digits.clear();
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
+	if (to_copy < 0) {
 		negate();
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (llint to_copy) {
-	bool copy_neg = false;
-	if (to_copy < 0) {
-		to_copy = -to_copy;
-		copy_neg = true;
-	}
+hugeint &hugeint::operator= (uint32_t to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back((uint)(to_copy & 0x00000000ffffffff));
-		to_copy <<= 32;
-		if (to_copy) {
-			digits.push_back(to_copy);
-		}
-	}
-	if (copy_neg) {
+	digits.push_back(to_copy);
+	clearZeros();
+	return *this;
+}
+#ifdef DIGIT_32
+hugeint &hugeint::operator= (int64_t to_copy) {
+	digits.clear();
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	digits.push_back((neg ? -to_copy : to_copy) >> digit_len);
+	clearZeros();
+	if (to_copy < 0) {
 		negate();
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (usint to_copy) {
+hugeint &hugeint::operator= (uint64_t to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back(to_copy);
+	digits.push_back(to_copy);
+	digits.push_back(to_copy >> digit_len);
+	clearZeros();
+	return *this;
+}
+#endif
+#ifdef DIGIT_64
+hugeint &hugeint::operator= (int64_t to_copy) {
+	digits.clear();
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	clearZeros();
+	if (to_copy < 0) {
+		negate();
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (uint to_copy) {
+hugeint &hugeint::operator= (uint64_t to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back(to_copy);
+	digits.push_back(to_copy);
+	clearZeros();
+	return *this;
+}
+hugeint &hugeint::operator= (__int128 to_copy) {
+	digits.clear();
+	neg = false;
+	digits.push_back(neg ? -to_copy : to_copy);
+	digits.push_back((neg ? -to_copy : to_copy) >> digit_len);
+	clearZeros();
+	if (to_copy < 0) {
+		negate();
 	}
 	return *this;
 }
-hugeint &hugeint::operator= (ullint to_copy) {
+hugeint &hugeint::operator= (unsigned __int128 to_copy) {
 	digits.clear();
 	neg = false;
-	if (to_copy) {
-		digits.push_back((uint)to_copy);
-		to_copy >>= 32;
-		if (to_copy) {
-			digits.push_back(to_copy);
-		}
-	}
+	digits.push_back(to_copy);
+	digits.push_back(to_copy >> digit_len);
+	clearZeros();
 	return *this;
 }
+#endif
 hugeint &hugeint::operator= (float to_copy) {
-	uint val = *(uint *)(&to_copy);
-	int shift = ((val & 0x7f800000) >> 23) - 150;
 	digits.clear();
-	neg = false;
-	digits.push_back((val & 0x007fffff) | 0x00800000);
+	uint32_t val = *(uint32_t *)(&to_copy);
+	uint32_t shift = ((val & 0x7f800000) >> 23) - 150;
+	*this = (val & 0x007fffff) | 0x00800000;
 	*this <<= shift;
 	clearZeros();
 	if (val & 0x80000000) {
@@ -590,12 +597,10 @@ hugeint &hugeint::operator= (float to_copy) {
 	return *this;
 }
 hugeint &hugeint::operator= (double to_copy) {
-	ullint val = *(ullint *)(&to_copy);
-	int shift = ((val & 0x7ff0000000000000) >> 52) - 1075;
 	digits.clear();
-	neg = false;
-	digits.push_back(val & 0x00000000ffffffff);
-	digits.push_back(((val & 0x000fffff00000000) >> 32) | 0x00100000);
+	uint64_t val = *(uint64_t *)(&to_copy);
+	uint64_t shift = ((val & 0x7ff0000000000000) >> 52) - 1075;
+	*this = (val & 0x000fffffffffffff) | 0x0010000000000000;
 	*this <<= shift;
 	clearZeros();
 	if (val & 0x8000000000000000) {
@@ -616,30 +621,53 @@ hugeint &hugeint::operator= (const char *to_copy) {
 hugeint::operator bool () const {
 	return (!digits.empty() || neg);
 }
-hugeint::operator short int () const {
-	return (digits.empty() ? (neg ? -1 : 0) : (sint)digits[0]);
+hugeint::operator int16_t () const {
+	uint16_t num = digits.empty() ? digits[0] : (neg ? 0xffff : 0);
+	return *(int16_t *)(&num);
 }
-hugeint::operator int () const {
-	return (digits.empty() ? (neg ? -1 : 0) : (int)digits[0]);
+hugeint::operator uint16_t () const {
+	return digits.empty() ? digits[0] : (neg ? 0xffff : 0);
 }
-hugeint::operator long int () const {
-	return (lint)this->operator long long int();
+hugeint::operator int32_t () const {
+	uint32_t num = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
+	return *(int32_t *)(&num);
 }
-hugeint::operator long long int () const {
-	return (digits.empty() ? (neg ? -1 : 0) : digits[0] + (llint)(digits.size() < 2 ? (neg ? -0x7fffffff00000000 : 0) : (ullint)digits[1] << 32));
+hugeint::operator uint32_t () const {
+	return digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
 }
-hugeint::operator unsigned short int () const {
-	return (digits.empty() ? 0 : (short int)(neg ? -digits[0] : digits[0]));
+#ifdef DIGIT_32
+hugeint::operator int64_t () const {
+	uint64_t num1 = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
+	uint64_t num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffff : 0);
+	uint64_t num = (num2 << digit_len) | num1;
+	return *(int64_t *)(&num);
 }
-hugeint::operator unsigned int () const {
-	return (digits.empty() ? 0 : (neg ? -digits[0] : digits[0]));
+hugeint::operator uint64_t () const {
+	uint64_t num1 = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
+	uint64_t num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffff : 0);
+	return (num2 << digit_len) | num1;
 }
-hugeint::operator unsigned long int () const {
-	return (ulint)this->operator unsigned long long int();
+#endif
+#ifdef DIGIT_64
+hugeint::operator int64_t () const {
+	uint64_t num = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
+	return *(int32_t *)(&num);
 }
-hugeint::operator unsigned long long int () const {
-	return (digits.empty() ? 0 : (neg ? -digits[0] : digits[0]) + (digits.size() < 2 ? 0 : (neg ? -(llint)digits[1] : (llint)digits[1]) << 32));
+hugeint::operator uint64_t () const {
+	return digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
 }
+hugeint::operator __int128 () const {
+	unsigned __int128 num1 = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
+	unsigned __int128 num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffffffffffff : 0);
+	unsigned __int128 num = (num2 << digit_len) | num1;
+	return *(__int128 *)(&num);
+}
+hugeint::operator unsigned __int128 () const {
+	unsigned __int128 num1 = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
+	unsigned __int128 num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffffffffffff : 0);
+	return (num2 << digit_len) | num1;
+}
+#endif
 hugeint::operator float () const {
 	if (!neg && digits.empty()) {
 		return (float)0;
@@ -647,64 +675,29 @@ hugeint::operator float () const {
 	if (size() > 128) {
 		return neg ? -__builtin_inff() : __builtin_inff();
 	}
-	const hugeint *num = this;
+
+	uint32_t mant = (uint32_t)(*this >> (size() - 24));
 	if (neg) {
-		hugeint *temp = new hugeint(-*this);
-		num = temp;
+		mant = ~mant;
 	}
-	uint mant, add;
-	add = num->digits.back();
-	int shift = __builtin_clz(add) - 8;
-	mant = (shift < 0 ? add >> (-shift) : add << shift);
-	shift -= 32;
-	if (num->digits.size() > 1) {
-		add = num->digits[num->digits.size() - 2];
-		mant |= (shift < 0 ? add >> (-shift) : add << shift);
-	}
-	mant &= (1u << 23) - 1;
-	if (neg) {
-		delete (num);
-	}
-	uint val = (neg ? 0x80000000 : 0x00000000) | ((size() + 126) << 23) | mant;
+	uint32_t val = (neg ? 0x80000000 : 0x00000000) | ((size() + 127) << 23) | (mant & 0x007fffff);
 	return *((float *)&val);
 }
 hugeint::operator double () const {
 	if (!neg && digits.empty()) {
-		return (double)0;
+		return (float)0;
 	}
-	if (size() > 1024) {
+	if (size() > 128) {
 		return neg ? -__builtin_inf() : __builtin_inf();
 	}
-	bool sign = neg;
-	const hugeint *num = this;
+
+	uint64_t mant = (uint64_t)(*this >> (size() - 53));
 	if (neg) {
-		hugeint *temp = new hugeint(-*this);
-		num = temp;
+		mant = ~mant;
 	}
-	ullint mant, add;
-	add = num->digits.back();
-	int shift = __builtin_clzll(add) - 11;
-	mant = (shift < 0 ? add >> (-shift) : add << shift);
-	shift -= 32;
-	if (num->digits.size() > 1) {
-		add = num->digits[num->digits.size() - 2];
-		mant |= (shift < 0 ? add >> (-shift) : add << shift);
-		shift -= 32;
-	}
-	if (num->digits.size() > 2) {
-		add = num->digits[num->digits.size() - 3];
-		mant |= (shift < 0 ? add >> (-shift) : add << shift);
-	}
-	mant &= (1ull << 52) - 1;
-	if (sign) {
-		delete (num);
-	}
-	ullint val = (neg ? 0x8000000000000000 : 0x0000000000000000) | ((size() + 1022) << 52) | mant;
-	return *((double *)&val);
+	uint64_t val = (neg ? 0x8000000000000000 : 0x0000000000000000) | ((size() + 1023) << 52) | (mant & 0x000fffffffffffff);
+	return *((float *)&val);
 }
 hugeint::operator std::string () const {
 	return toDec();
-}
-hugeint::operator const char * () const {
-	return toDec().c_str();
 }

@@ -32,10 +32,10 @@
 *.app
 
 #folders
-/cmake-build-debug
-/cmake-build-release
-/.vscode
-/.idea
+cmake-build-debug/
+cmake-build-release/
+.vscode/
+.idea/
 
 #CMake files
 CMakeLists.txt
