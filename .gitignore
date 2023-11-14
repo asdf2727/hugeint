@@ -44,3 +44,6 @@ CMakeLists.txt
 3n+1_Conjecture.cpp
 test.cpp
 check.cpp
+
+#other files
+out.txt
