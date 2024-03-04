@@ -7,6 +7,8 @@
 
 using namespace huge;
 
+typedef std::vector <digit_t>::iterator iterator_t;
+
 void hugeint::clearZeros () {
 	while (!digits.empty() && digits.back() == (neg ? digit_max : 0)) {
 		digits.pop_back();
@@ -383,6 +385,7 @@ hugeint hugeint::addKaratsuba (std::vector <digit_t>::iterator begin1, std::vect
 		std::swap(begin1, begin2);
 		std::swap(end1, end2);
 	}
+	ret.digits.reserve(end1 - begin1);
 	digit_t carry = 0;
 	while (begin2 != end2) {
 		ret.digits.push_back(*begin1 + *begin2 + carry);
@@ -400,12 +403,9 @@ hugeint hugeint::addKaratsuba (std::vector <digit_t>::iterator begin1, std::vect
 	}
 	return ret;
 }
-
-#include <iostream>
-
 hugeint hugeint::karatsuba (std::vector <digit_t>::iterator begin1, std::vector <digit_t>::iterator end1,
                             std::vector <digit_t>::iterator begin2, std::vector <digit_t>::iterator end2, size_t block_size) {
-	// Explination for the karatsuba fast multiplication agorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
+	// Explanation for the karatsuba fast multiplication algorithm: https://en.wikipedia.org/wiki/Karatsuba_algorithm
 	block_size >>= 1;
 	std::vector <digit_t>::iterator cut1 = std::min(begin1 + block_size, end1);
 	std::vector <digit_t>::iterator cut2 = std::min(begin2 + block_size, end2);
@@ -417,11 +417,8 @@ hugeint hugeint::karatsuba (std::vector <digit_t>::iterator begin1, std::vector 
 	while (begin2 != last2 && *(last2 - 1) == 0) {
 		last2--;
 	}
-	std::cout << last1 - begin1 << ' ' << cut1 - begin1 << ' ' << end1 - begin1 << '\n';
-	std::cout << last2 - begin2 << ' ' << cut2 - begin2 << ' ' << end2 - begin2 << '\n';
-
 	hugeint high, mid, low;
-	//high = multAlgorithm(cut1, end1, cut2, end2, block_size);
+	high = multAlgorithm(cut1, end1, cut2, end2, block_size);
 	low = multAlgorithm(begin1, last1, begin2, last2, block_size);
 	hugeint add1 = addKaratsuba(begin1, last1, cut1, end1);
 	hugeint add2 = addKaratsuba(begin2, last2, cut2, end2);
@@ -457,11 +454,9 @@ hugeint hugeint::multAlgorithm (std::vector <digit_t>::iterator begin1, std::vec
 	if (size1 * size1 < size2 || size2 * size2 < size1) {
 		return simpleMult(begin1, end1, begin2, end2);
 	}
-	std::cout << block_size << '\n';
 	while (block_size >= std::max(size1, size2) << 1) {
 		block_size >>= 1;
 	}
-	std::cout << block_size << '\n';
 	return karatsuba(begin1, end1, begin2, end2, block_size);
 }
 hugeint hugeint::calculateMult (const hugeint &lhs, const hugeint &rhs) {
@@ -512,11 +507,15 @@ void hugeint::setRamdon (size_t size, bool rand_sign) {
 }
 
 void hugeint::calculateGcd (hugeint other) {
-	hugeint rest;
 	while (other) {
-		rest = (*this) % other;
-		*this = other;
-		other = rest;
+		*this = (*this) % other;
+		if (*this) {
+			other = other % (*this);
+		}
+		else {
+			*this = other;
+			break;
+		}
 	}
 }
 

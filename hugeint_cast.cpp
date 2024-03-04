@@ -642,49 +642,49 @@ hugeint::operator bool () const {
 	return (!digits.empty() || neg);
 }
 hugeint::operator int16_t () const {
-	uint16_t num = digits.empty() ? digits[0] : (neg ? 0xffff : 0);
+	uint16_t num = digits.empty() ? (neg ? 0xffff : 0) : digits[0];
 	return *(int16_t *)(&num);
 }
 hugeint::operator uint16_t () const {
-	return digits.empty() ? digits[0] : (neg ? 0xffff : 0);
+	return digits.empty() ? (neg ? 0xffff : 0) : digits[0];
 }
 hugeint::operator int32_t () const {
-	uint32_t num = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
+	uint32_t num = digits.empty() ? (neg ? 0xffffffff : 0) : digits[0];
 	return *(int32_t *)(&num);
 }
 hugeint::operator uint32_t () const {
-	return digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
+	return digits.empty() ? (neg ? 0xffffffff : 0) : digits[0];
 }
 #ifdef DIGIT_32
 hugeint::operator int64_t () const {
-	uint64_t num1 = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
-	uint64_t num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffff : 0);
+	uint64_t num1 = digits.empty() ? (neg ? 0xffffffff : 0) : digits[0];
+	uint64_t num2 = digits.size() < 2 ? (neg ? 0xffffffff : 0) : digits[1];
 	uint64_t num = (num2 << digit_len) | num1;
 	return *(int64_t *)(&num);
 }
 hugeint::operator uint64_t () const {
-	uint64_t num1 = digits.empty() ? digits[0] : (neg ? 0xffffffff : 0);
-	uint64_t num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffff : 0);
+	uint64_t num1 = digits.empty() ? (neg ? 0xffffffff : 0) : digits[0];
+	uint64_t num2 = digits.size() < 2 ? (neg ? 0xffffffff : 0) : digits[1];
 	return (num2 << digit_len) | num1;
 }
 #endif
 #ifdef DIGIT_64
 hugeint::operator int64_t () const {
-	uint64_t num = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
-	return *(int32_t *)(&num);
+	uint64_t num = digits.empty() ? (neg ? 0xffffffffffffffff : 0) : digits[0];
+	return *(int64_t *)(&num);
 }
 hugeint::operator uint64_t () const {
-	return digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
+	return digits.empty() ? (neg ? 0xffffffffffffffff : 0) : digits[0];
 }
 hugeint::operator __int128 () const {
-	unsigned __int128 num1 = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
-	unsigned __int128 num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffffffffffff : 0);
+	unsigned __int128 num1 = digits.empty() ? (neg ? 0xffffffffffffffff : 0) : digits[0];
+	unsigned __int128 num2 = digits.size() < 2 ? (neg ? 0xffffffffffffffff : 0) : digits[1];
 	unsigned __int128 num = (num2 << digit_len) | num1;
 	return *(__int128 *)(&num);
 }
 hugeint::operator unsigned __int128 () const {
-	unsigned __int128 num1 = digits.empty() ? digits[0] : (neg ? 0xffffffffffffffff : 0);
-	unsigned __int128 num2 = digits.size() < 2 ? digits[1] : (neg ? 0xffffffffffffffff : 0);
+	unsigned __int128 num1 = digits.empty() ? (neg ? 0xffffffffffffffff : 0) : digits[0];
+	unsigned __int128 num2 = digits.size() < 2 ? (neg ? 0xffffffffffffffff : 0) : digits[1];
 	return (num2 << digit_len) | num1;
 }
 #endif

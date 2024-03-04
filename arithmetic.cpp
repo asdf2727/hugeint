@@ -5,7 +5,7 @@
 
 #include "hugeint.h"
 
-#define L_TO_R_POWER
+//#define L_TO_R_POWER
 
 using namespace huge;
 
@@ -26,205 +26,326 @@ public:
 
 class calculator {
 private:
-	std::string equation;
-	std::string::iterator parse;
+	std::string::const_iterator parse;
+	const char operators[6] = { '+', '-', '*', '/', '%', '^' };
 
-	bool error;
-	std::string err_msg;
+	int error_id;
+	std::string message;
 
 	void skipSpaces () {
 		while (*parse == ' ' && parse != equation.end()) {
 			parse++;
 		}
 	}
-	char peakChar () {
+	inline void nextChar () {
+		parse++;
 		skipSpaces();
-		return *parse;
 	}
-	char getChar () {
-		skipSpaces();
-		char ans = *parse++;
-		skipSpaces();
+
+	bool isOperator () {
+		for (char comp : operators) {
+			if (comp == *parse) {
+				return true;
+			}
+		}
+		return false;
+	}
+	bool isSpecial () {
+		return parse == equation.end() || isOperator() || *parse == '(' || *parse == ')' || *parse == ' ' || *parse == ',';
+	}
+
+	hugeint calcNumber () {
+		hugeint ans = 0;
+		int errPos;
+		bool neg = false;
+		std::string::const_iterator start = parse;
+		std::string str;
+
+		/// Read string
+		while (parse != equation.end() && (*parse == '+' || *parse == '-')) {
+			neg ^= (*parse == '-');
+			nextChar();
+		}
+		while (!isSpecial()) {
+			str.push_back(*parse);
+			parse++;
+		}
+
+		// Try interpreting as a number
+		if (!str.empty()) {
+			errPos = ans.fromString(str.begin(), str.end());
+			skipSpaces();
+			if (errPos == -1) {
+				if (neg) {
+					ans.negate();
+				}
+				return ans;
+			}
+		}
+
+		/// If it isn't a number, try interpreting as a function or as brackets
+		std::vector <hugeint> params;
+		bool has_brackets = false;
+
+		if (*parse == '(') {
+			has_brackets = true;
+			nextChar();
+			if (*parse != ')') {
+				params.push_back(calcMember(0));
+				while (!error_id && parse != equation.end() && *parse == ',') {
+					nextChar();
+					params.push_back(calcMember(0));
+				}
+				if (error_id) {
+					return 0;
+				}
+			}
+			if (parse == equation.end()) {
+				message = "Expected closing bracket for " + (str.empty() ? "operation" : "function \'" + str + "\'");
+				error_id = 2;
+				return 0;
+			}
+			if (*parse != ')') {
+				error_id = 1;
+				return 0;
+			}
+			nextChar();
+		}
+
+		if (str.empty()) {
+			if (params.size() == 0) {
+				message = "Void numbers are invalid. Try putting \'0\' instead";
+				error_id = 5;
+				return 0;
+			}
+			if (params.size() > 1) {
+				message = "Invalid use of \',\' inside brackets";
+				error_id = 4;
+				return 0;
+			}
+			ans = params.empty() ? (hugeint)0 : params[0];
+		}
+		else if (str == "fact") {
+			if (params.size() > 1) {
+				message = "Function \'fact\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			hugeint ans = 1;
+			for (int index = 2; index <= (int)params[0]; index++) {
+				ans *= index;
+			}
+			return ans;
+		}
+		else if (str == "rand") {
+			if (params.size() > 1) {
+				message = "Function \'rand\' only accepts 0 or 1 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans.rand((params.empty() ? 32 : (size_t)params[0]), false);
+		}
+		else if (str == "gcd") {
+			if (params.size() != 2) {
+				message = "Function \'gcd\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::gcd(params[0], params[1]);
+		}
+		else if (str == "abs") {
+			if (params.size() != 1) {
+				message = "Function \'abs\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::abs(params[0]);
+		}
+		else if (str == "pow") {
+			if (params.size() != 2) {
+				message = "Function \'pow\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::pow(params[0], (int)params[1]);
+		}
+		else if (str == "sqrt") {
+			if (params.size() != 1) {
+				message = "Function \'sqrt\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::sqrt(params[0]);
+		}
+		else if (str == "cbrt") {
+			if (params.size() != 1) {
+				message = "Function \'cbrt\' only accepts 1 parameter";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::cbrt(params[0]);
+		}
+		else if (str == "nthroot") {
+			if (params.size() != 2) {
+				message = "Function \'nthroot\' only accepts 2 parameters";
+				error_id = 7;
+				return 0;
+			}
+			ans = huge::nthroot(params[0], params[1]);
+		}
+		else {
+			if (has_brackets) {
+				message = "Unrecognised function \'" + str + "\' found";
+				error_id = 6;
+			}
+			else {
+				message = "Unrecognised \'";
+				message += *(start + errPos);
+				message += "\' character found in word \'";
+				message += str;
+				message += "\'";
+				error_id = 1;
+			}
+			return 0;
+		}
+
+		if (neg) {
+			ans.negate();
+		}
+
 		return ans;
 	}
 
-	int getPriority () {
-		if (parse == equation.end()) {
-			return 0;
+	hugeint calcMember (int priority) {
+		hugeint member = calcNumber();
+
+		if (parse != equation.end() && *parse == '^' && priority < 3) {
+			calcPower(member);
 		}
-		else {
-			char now = *parse;
-			if (now == ')') {
-				return 1;
-			}
-			else if (now == '+' || now == '-') {
-				return 2;
-			}
-			else if (now == '*' || now == '/' || now == '%') {
-				return 3;
-			}
-			else if (now == '^') {
-				return 4;
-			}
-			else if ('0' <= now && now <= '9') {
-				return 5;
-			}
-			return 6;
+		if (parse != equation.end() && (!isOperator() || *parse == '*' || *parse == '/' || *parse == '%') && priority < 2) {
+			calcMultiplication(member);
 		}
+		if (parse != equation.end() && (*parse == '+' || *parse == '-') && priority < 1) {
+			calcAdition(member);
+		}
+
+		return member;
+	}
+	inline bool readOperator (int priority) {
+		if (parse == equation.end() || *parse == ')' || *parse == ',') {
+			return false;
+		}
+		if (*parse == '+' || *parse == '-') {
+			return priority == 1;
+		}
+		if (*parse == '^') {
+			return priority == 3;
+		}
+		// If no other operator was found, try applying multiplication, maybe without the symbol
+		return priority == 2;
 	}
 
-	hugeint calcWord () {
-		if (peakChar() == '(') {
-			getChar();
-			return calcAdition();
-		}
-		else {
-			bool neg = false;
-			if (peakChar() == '-') {
-				getChar();
-				neg = true;
-			}
-			std::string::const_iterator start = parse;
-			while (getPriority() > 4) {
-				parse++;
-			}
-			hugeint result;
-			if (!error && !result.fromString(start, parse)) {
-				err_msg = (std::string)"Unrecognised symbol inside a number.";
-				error = true;
-			}
-			return result;
-		}
-	}
-
-	hugeint calcPower () {
-		hugeint result = calcWord();
+	void calcPower (hugeint &ans) {
 #ifdef L_TO_R_POWER
-		while (true) {
-			peakChar();
-			// break if wrong priority or if a syntax error was found
-			if (getPriority() != 4 || error) {
-				break;
-			}
-			getChar();
-			result.pow(calcWord());
+		while (readOperator(3) && !error_id) {
+			nextChar();
+			ans.pow(calcMember(3));
 		}
 #else
-		peakChar();
-		// break if wrong priority or if a syntax error was found
-		if (getPriority() != 4 || error) {
-			return result;
+		std::vector <hugeint> numbers;
+		numbers.push_back(ans);
+		while (readOperator(3) && !error_id) {
+			nextChar();
+			numbers.push_back(calcMember(3));
 		}
-		getChar();
-		hugeint exp = calcPower();
-		if (exp != (int)exp) {
-			error = true;
-			err_msg = "Result is too big!";
+		if (error_id) {
+			return;
 		}
-		else {
-			result.pow(exp);
+		while (numbers.size() > 1) {
+			numbers[numbers.size() - 2].pow(numbers.back());
+			numbers.pop_back();
 		}
+		ans = numbers[0];
 #endif
-		return result;
 	}
 
-	hugeint calcMultiplication () {
-		short int type = 0; // 0 - multiply, 1 - divide, 2 - modulo
-		hugeint result = 1;
-		char newChar;
-		while (true) {
-			// recursive call
-			if (type == 0) {
-				result *= calcPower();
+	void calcMultiplication (hugeint &ans) {
+		while (readOperator(2) && !error_id) {
+			if (*parse == '*') {
+				nextChar();
+				ans *= calcMember(2);
 			}
-			else if (type == 1) {
-				result /= calcPower();
+			else if (*parse == '/') {
+				nextChar();
+				ans /= calcMember(2);
 			}
-			else if (type == 2) {
-				result %= calcPower();
-			}
-			newChar = peakChar();
-			// break if wrong priority or if a syntax error was found
-			if (getPriority() != 3 || error) {
-				break;
-			}
-			// get the next sign
-			if (newChar == '*') {
-				type = 0;
-				getChar();
-			}
-			else if (newChar == '/') {
-				type = 1;
-				getChar();
-			}
-			else if (newChar == '%') {
-				type = 2;
-				getChar();
+			else if (*parse == '%') {
+				nextChar();
+				ans %= calcMember(2);
 			}
 			else {
-				// Assume everything is multiplication if valid operator follows
-				// This allows for some cool stuff like 2(1 + 1) = 4 or wierd stuff like (5 5) = 25
-				type = 0;
+				ans *= calcMember(2);
 			}
 		}
-		return result;
 	}
-
-	hugeint calcAdition () {
-		short int type = 0; // 0 - add, 1 - subtract
-		hugeint result = 0;
-		char newChar;
-		while (true) {
-			// recursive call
-			if (type == 0) {
-				result += calcMultiplication();
-			}
-			else if (type == 1) {
-				result -= calcMultiplication();
-			}
-			newChar = peakChar();
-			// break if wrong priority or if a syntax error was found
-			if (getPriority() != 2 || error) {
-				if (getPriority() == 1) {
-					parse++;
-				}
-				break;
-			}
-			// get the next sign
-			if (newChar == '+') {
-				type = 0;
-				getChar();
-			}
-			else if (newChar == '-') {
-				type = 1;
-				getChar();
+	void calcAdition (hugeint &ans) {
+		while (readOperator(1) && !error_id) {
+			if (*parse == '+') {
+				nextChar();
+				ans += calcMember(1);
 			}
 			else {
-				err_msg = (std::string)"Unrecognised symbol \'" + *parse + "\'.";
-				error = true;
-				break;
+				nextChar();
+				ans -= calcMember(1);
 			}
 		}
-		return result;
 	}
-
 public:
-	void setEquation (const std::string &get_equation) {
-		equation = get_equation;
-	}
-	hugeint getResult () {
-		error = false;
-		err_msg.clear();
+	/*
+	Error codes:
+		0 - All clear
+		1 - Unrecognised character
+		2 - expected closing bracket
+		3 - unmached closing bracket
+		4 - invalid ','
+		5 - void numbers invalid
+		6 - invalid function name
+		7 - function only accepts n params
+	*/
+
+	std::string equation;
+	hugeint result;
+
+	hugeint getResult (std::string &error) {
+		error_id = 0;
+		message = "";
 		parse = equation.begin();
-		peakChar();
-		hugeint result = calcAdition();
-		if (error) {
-			std::cout << err_msg << std::endl;
-			return 0;
+		skipSpaces();
+		result = calcMember(0);
+		if (!error_id && parse != equation.end()) {
+			if (*parse == ')') {
+				error_id = 3;
+				message = "Unmatched closing bracket found";
+			}
+			else if (*parse == ',') {
+				error_id = 4;
+				message = "Invalid use of \',\' in operation";
+			}
+			else {
+				error_id = 1;
+				message = "Unrecognised \'";
+				message += *parse;
+				message += "\' character found";
+			}
+			result = 0;
+		}
+		if (error_id) {
+			error = "#" + std::to_string(error_id) + ": " + message;
 		}
 		else {
-			return result;
+			error = "";
 		}
+		return result;
 	}
 };
 
@@ -233,9 +354,10 @@ int main () {
 	std::string read;
 	calculator example;
 	getline(std::cin, read);
-	example.setEquation(read);
+	example.equation = read;
+	read.clear();
 	global.reset();
-	hugeint ans = example.getResult();
+	hugeint ans = example.getResult(read);
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
 	std::cout << "Answer: " << std::endl;
 	std::cout << "Hexadecimal: " << ans.toHex() << std::endl;

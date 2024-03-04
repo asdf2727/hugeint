@@ -9,7 +9,7 @@
 namespace huge {
 
 // #define DIGIT_64 // Uncomment this to enable manual 64 bit digit size
-#define DIGIT_32 // Uncomment this to enable manual 32 bit digit size
+// #define DIGIT_32 // Uncomment this to enable manual 32 bit digit size
 
 #ifndef DIGIT_64
 #ifndef DIGIT_32
@@ -380,8 +380,6 @@ NOT_HUGEINT_TEMP friend inline NotHugeint &operator op_name (NotHugeint &lhs, co
 		hugeint ret = num;
 		return ret.nthroot(degree);
 	}
-
-#undef NOT_HUGEINT_TEMP
 }
 
 inline std::ostream &operator<< (std::ostream &out, const huge::hugeint &to_show) {
@@ -398,3 +396,10 @@ inline std::istream &operator>> (std::istream &in, huge::hugeint &to_set) {
 	to_set.fromString(input_string.begin(), input_string.end());
 	return in;
 }
+
+#undef NOT_HUGEINT_TEMP
+#undef INTEGER_TEMP
+
+#undef COMPARE
+#undef OPERATION
+#undef ASSIGN
