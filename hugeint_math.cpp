@@ -1,13 +1,8 @@
 #include "hugeint.h"
 
-#include <cmath>
 #include <cstring>
 #include <random>
 #include <functional>
-
-using namespace huge;
-
-typedef std::vector <digit_t>::iterator iterator_t;
 
 void hugeint::clearZeros () {
 	while (!digits.empty() && digits.back() == (neg ? digit_max : 0)) {
@@ -472,19 +467,61 @@ hugeint hugeint::calculateMult (const hugeint &lhs, const hugeint &rhs) {
 	return ret;
 }
 
+hugeint hugeint::simpleDiv (hugeint lhs, hugeint rhs, bool rem) {
+	size_t init_shift = digit_len - (rhs.size() & (digit_len - 1));
+	lhs <<= init_shift;
+	rhs <<= init_shift;
+
+	size_t len_dif = lhs.digits.size() - rhs.digits.size();
+	hugeint temp1, temp2, ans;
+	if (!rem) {
+		ans.digits.resize(len_dif);
+	}
+
+	digit_t quot;
+	temp1 = rhs << (len_dif * digit_len);
+	if (lhs > temp1) {
+		lhs -= temp1;
+		ans.digits.push_back(1);
+	}
+	for (size_t i = len_dif - 1; i < lhs.digits.size(); i--) {
+		temp1 >>= int(digit_len); // Don't remove: https://www.reddit.com/r/cpp/comments/dl0c9y/passing_a_static_const_member_by_reftoconst/
+
+		quot = std::min(
+				(((double_t)lhs.digits[i + rhs.digits.size()] << digit_len) |
+				 lhs.digits[i + rhs.digits.size() - 1]) / rhs.digits.back(),
+				(double_t)digit_max);
+		temp2 = temp1 * quot;
+
+		lhs -= temp2;
+		while (lhs < 0) {
+			lhs += temp1;
+			quot--;
+		}
+		if (!rem) {
+			ans.digits[i] = quot;
+		}
+	}
+	if (rem) {
+		lhs >>= init_shift;
+		return lhs;
+	}
+	else {
+		ans.clearZeros();
+		return ans;
+	}
+}
 hugeint hugeint::calculateDiv (const hugeint &lhs, const hugeint &rhs) {
 	if (!(bool)rhs) {
 		throw (std::invalid_argument("Division by 0"));
 	}
-	// TODO later
-	return (hugeint)-1;
+	return simpleDiv(lhs, rhs);
 }
 hugeint hugeint::calculateMod (const hugeint &lhs, const hugeint &rhs) {
 	if (!(bool)rhs) {
 		throw (std::invalid_argument("Division by 0"));
 	}
-	// TODO later
-	return (hugeint)-1;
+	return simpleDiv(lhs, rhs, true);
 }
 
 void hugeint::setRamdon (size_t size, bool rand_sign) {
@@ -494,7 +531,7 @@ void hugeint::setRamdon (size_t size, bool rand_sign) {
 	auto random_digit = std::bind(distribution, generator);
 	neg = rand_sign && (random_digit() & 1);
 	digits.clear();
-	for (int index = 0; index < size >> digit_log_len; index++) {
+	for (size_t index = 0; index < (size >> digit_log_len); index++) {
 		digits.push_back(random_digit());
 	}
 	if (size & (digit_len - 1)) {
@@ -562,7 +599,7 @@ void hugeint::calculateNthRoot (root_t degree) {
 	hugeint ans;
 	for (size_t pos = size() / degree; pos <= size() / degree; pos--) {
 		ans.flipBit(pos);
-		if (huge::pow(ans, degree) > *this) {
+		if (pow(ans, degree) > *this) {
 			ans.flipBit(pos);
 		}
 	}

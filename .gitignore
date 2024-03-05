@@ -46,4 +46,5 @@ test.cpp
 check.cpp
 
 #other files
-out.txt
+*.txt
+*.pdf

@@ -1,7 +1,5 @@
 #include "hugeint.h"
 
-using namespace huge;
-
 size_t hugeint::fromHex (const std::string::const_iterator &begin, const std::string::const_iterator &end) {
 	for (std::string::const_iterator pos = begin; pos != end; pos++) {
 		if (*pos == '\'' || *pos == ' ') {
@@ -720,4 +718,19 @@ hugeint::operator double () const {
 }
 hugeint::operator std::string () const {
 	return toDec();
+}
+
+std::ostream &operator<< (std::ostream &out, const hugeint &to_show) {
+	out << (std::string)to_show;
+	return out;
+}
+std::ostream &operator<< (std::ostream &out, hugeint &&to_show) {
+	out << (std::string)to_show;
+	return out;
+}
+std::istream &operator>> (std::istream &in, hugeint &to_set) {
+	std::string input_string;
+	in >> input_string;
+	to_set.fromString(input_string.begin(), input_string.end());
+	return in;
 }
