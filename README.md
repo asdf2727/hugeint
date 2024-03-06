@@ -5,34 +5,34 @@ A C++ class that adds arbitrary precision integers aimed at high performance and
 ## Contents
 
 - [Capabilities](#capabilities)
-	- [Features](#features)
-	- [Ease of Use](#ease-of-use)
-	- [Efficiency](#efficiency)
+    - [Features](#features)
+    - [Ease of Use](#ease-of-use)
+    - [Efficiency](#efficiency)
 - [Usage](#usage)
-	- [How to use it in your project](#how-to-use-it-in-your-project)
-		- [Example](#example)
-	- [Input and Output](#input-and-output)
-		- [Iostream Compatibility](#iostream-compatibility)
-		- [Constructors and Assignments](#constructors-and-assignments)
-		- [String Assignment](#string-assignment)
-		- [Casting](#casting)
-	- [Operators](#operators)
-		- [Comparison Operators](#comparison-operators)
-		- [Boolean Logic](#boolean-logic)
-		- [Incrementing and Decrementing](#incrementing-and-decrementing)
-		- [Addition and Subtraction](#adition-and-subtraction)
-		- [Multiplication, Division and Modulus](#multiplication-division-and-modulus)
-	- [Functions](#functions)
-		- [String Functions](#string-functions)
-		- [Base Functions](#base-functions)
-		- [Bit Functions](#bit-functions)
-		- [Mathematical Functions](#mathematical-functions)
-			- [Absolute Value](#absolute-value)
-			- [Random Number](#random-number)
-			- [Greatest Common Divisor](#greatest-common-divisor)
-			- [Least Common Multiple](#least-common-multiple)
-			- [Exponentiation](#exponentiation)
-			- [Roots](#roots)
+    - [How to use it in your project](#how-to-use-it-in-your-project)
+        - [Example](#example)
+    - [Input and Output](#input-and-output)
+        - [Iostream Compatibility](#iostream-compatibility)
+        - [Constructors and Assignments](#constructors-and-assignments)
+        - [String Assignment](#string-assignment)
+        - [Casting](#casting)
+    - [Operators](#operators)
+        - [Comparison Operators](#comparison-operators)
+        - [Boolean Logic](#boolean-logic)
+        - [Incrementing and Decrementing](#incrementing-and-decrementing)
+        - [Addition and Subtraction](#adition-and-subtraction)
+        - [Multiplication, Division and Modulus](#multiplication-division-and-modulus)
+    - [Functions](#functions)
+        - [String Functions](#string-functions)
+        - [Base Functions](#base-functions)
+        - [Bit Functions](#bit-functions)
+        - [Mathematical Functions](#mathematical-functions)
+            - [Absolute Value](#absolute-value)
+            - [Random Number](#random-number)
+            - [Greatest Common Divisor](#greatest-common-divisor)
+            - [Least Common Multiple](#least-common-multiple)
+            - [Exponentiation](#exponentiation)
+            - [Roots](#roots)
 - [Work in Progress](#work-in-progress)
 
 # Capabilities
@@ -125,8 +125,7 @@ Spaces (``` ```) or apostrophes (```'```) are allowed at any point inside the nu
 
 Any number of `+` and `-` symbols can be present, as long as they are at the beginning of the string. For example, ```-x2DF``` is allowed, but ```x-2DF``` is not.
 
-**Warning:
-** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
+**Warning:** leading zeros are allowed, but if the first character after the sign is a zero and the next is a decimal digit, octal base is assumed.
 
 The functions related to string handling are explained [here](#string-functions).
 
@@ -191,7 +190,8 @@ Hugeint includes all operators used by int, each of them made to work with itsel
 
 - ### Adition and Subtraction
 
-  It includes ```+```, ```+=```, ```-```, ```-=``` and the unary versions of ```+``` and ```-```. All of them work as expected. Unary ```+``` does nothing and unary ```-``` negates the number.
+  It includes ```+```, ```+=```, ```-```, ```-=``` and the unary versions of ```+``` and ```-```. All of them work as
+  expected. Unary ```+``` does nothing and unary ```-``` negates the number.
 
   ```c++
   hugeint num1 = 3, num2 = 4;
@@ -203,8 +203,8 @@ Hugeint includes all operators used by int, each of them made to work with itsel
 
   It includes ```*```, ```*=```, ```/```, ```/=```, ```%``` and ```%=```. All of them work as expected.
 
-  **note:
-  ** multiplication switches automaticly bewteen simple multiplication and Karatsuba's algorithm of, taking the one that's faster.
+  **note:** multiplication switches automaticly bewteen simple multiplication and Karatsuba's algorithm of, taking the
+  one that's faster.
 
   ```c++
   hugeint num1 = 3, num2 = 4, num3 = 7;
@@ -218,14 +218,15 @@ The library also includes some functions for ease of use, with more coming in th
 
 - ### String Methods
 
-	- ```uint64_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an assignment with std::string. Overwrites 'this' with the number parsed between [begin, end).
+    - ```uint64_t fromString (std::string::const_iterator begin, std::string::const_iterator end)``` - the same as an
+      assignment with std::string. Overwrites 'this' with the number parsed between [begin, end).
 
   If you want to output in a base another than decimal, use one of these funtions:
 
-	- ```std::string toHex ()``` - write 'this' as a string in hexadecimal. Includes ```0x``` as a prefix.
-	- ```std::string toDec ()``` - write 'this' as a string in decimal.
-	- ```std::string toOct ()``` - write 'this' as a string in octal. Includes ```o``` as a prefix.
-	- ```std::string toBin ()``` - write 'this' as a string in octal. Includes ```b``` as a suffix.
+    - ```std::string toHex ()``` - write 'this' as a string in hexadecimal. Includes ```0x``` as a prefix.
+    - ```std::string toDec ()``` - write 'this' as a string in decimal.
+    - ```std::string toOct ()``` - write 'this' as a string in octal. Includes ```o``` as a prefix.
+    - ```std::string toBin ()``` - write 'this' as a string in octal. Includes ```b``` as a suffix.
 
   ```c++
   hugeint num;
@@ -236,8 +237,8 @@ The library also includes some functions for ease of use, with more coming in th
   ```
 
 - ### Base Methods
-	- ```ullint size ()``` - returns the size of the number in digits.
-	- ```void negate ()``` - the same as unary ```-```. Negates the number.
+    - ```ullint size ()``` - returns the size of the number in digits.
+    - ```void negate ()``` - the same as unary ```-```. Negates the number.
 
   ```c++
   hugeint num = "7";
@@ -250,9 +251,9 @@ The library also includes some functions for ease of use, with more coming in th
 
   A more direct way of modifying and reading digits of the number. All functions allow positions outside written values (i.e. leading zeros), but due to two's complement negative numbers have leading ones. The position represents the bit index (e.g. 1000b is the 3rd bit).
 
-	- ```bool getBit (uint64_t pos)``` - returns the value of bit pos.
-	- ```void flipBit (uint64_t pos)``` - flips the bit at position pos.
-	- ```void setBit (uint64_t pos, bool val)``` - sets the bit at position pos with the value val.
+    - ```bool getBit (uint64_t pos)``` - returns the value of bit pos.
+    - ```void flipBit (uint64_t pos)``` - flips the bit at position pos.
+    - ```void setBit (uint64_t pos, bool val)``` - sets the bit at position pos with the value val.
 
 - ### Mathematical Functions
 
@@ -260,62 +261,70 @@ The library also includes some functions for ease of use, with more coming in th
 
   **ALL** member functions modify the instance on which they are called and return the modified value.
 
-  **ALL** External functions create and return new instances.
+  **ALL** static functions create and return new instances.
 
-  **note:
-  ** All external functions are declared in the 'huge' namespace to avoid ambiguity bewteen std functions and hugeint custom ones.
+  **note:** All static functions are declared in the 'huge' namespace to avoid ambiguity bewteen std functions and hugeint custom ones.
 
-	- #### Absolute Value
+    - #### Absolute Value
 
-	  Computes the absolute value of a hugeint.
+      Computes the absolute value of a hugeint.
 
-		- ```hugeint abs ()``` - member function. Turns 'this' into it's absolute value.
-		- ```hugeint huge::abs (hugeint to_abs)``` - external function. Returns to_abs in absolute value.
+        - ```hugeint abs ()``` - member function. Turns 'this' into it's absolute value.
+        - ```hugeint::abs (hugeint to_abs)``` - static function. Returns to_abs in absolute value.
 
-	- #### Random Number
+    - #### Random Number
 
-	  Computes a random hugeint. The sign is randomised if rand_sign is true, otherwise it is positive.
+      Computes a random hugeint. The sign is randomised if rand_sign is true, otherwise it is positive.
 
-		- ```hugeint rand (uint64_t size, bool rand_sign)``` - member function. Turns 'this' into the random value.
-		- ```hugeint huge::rand (uint64_t size, bool rand_sign)``` - external function. Returns the random value.
+        - ```hugeint rand (uint64_t size, bool rand_sign)``` - member function. Turns 'this' into the random value.
+        - ```hugeint::rand (uint64_t size, bool rand_sign)``` - static function. Returns the random value.
 
-	- #### Greatest Common Divisor
+    - #### Greatest Common Divisor
 
-	  Computes the greatest common divisor between 2 hugeints.
+      Computes the greatest common divisor between 2 hugeints.
 
-		- ```hugeint gcd (const hugeint &other)``` - member function. Turns 'this' into the gcd between it and 'other'.
-		- ```hugeint huge::gcd (const hugeint &num1, const hugeint &num2)``` - external function. returns the gcd between num1 and num2.
+        - ```hugeint gcd (const hugeint &other)``` - member function. Turns 'this' into the gcd between it and 'other'.
+        - ```hugeint::gcd (const hugeint &num1, const hugeint &num2)``` - static function. returns the gcd
+          between num1 and num2.
 
-	- #### Least Common Multiple
+    - #### Least Common Multiple
 
-	  Computes the least common multiple between 2 hugeints.
+      Computes the least common multiple between 2 hugeints.
 
-		- ```hugeint lcm (const hugeint &other)``` - member function. Turns 'this' into the lcm between itself and '
-		  other'.
-		- ```hugeint huge::lcm (const hugeint &num1, const hugeint &num2)``` - external function. returns the lcm between num1 and num2.
+        - ```hugeint lcm (const hugeint &other)``` - member function. Turns 'this' into the lcm between itself and '
+          other'.
+        - ```hugeint::lcm (const hugeint &num1, const hugeint &num2)``` - static function. returns the lcm
+          between num1 and num2.
 
-	- #### Exponentiation
+    - #### Exponentiation
 
-	  Computes a hugeint raised to an exponent, with or without modulo.
+      Computes a hugeint raised to an exponent, with or without modulo.
 
-		- ```hugeint pow (uint64_t exponent)``` - member function. raises 'this' to the exponent.
-		- ```hugeint huge::pow (hugeint base, uint64_t exponent)``` - external function. returns base ^ exponent.
-		- ```hugeint pow (uint64_t exponent, const hugeint &modulus)``` - member function. raises 'this' to the exponent, then aplies the modulo.
-		- ```hugeint huge::pow (hugeint base, uint64_t exponent, const hugeint &modulus)``` - external funtion. reutrns (base ^ exponent) % modulo.
+        - ```hugeint pow (uint64_t exponent)``` - member function. raises 'this' to the exponent.
+        - ```hugeint::pow (hugeint base, uint64_t exponent)``` - static function. returns base ^
+          exponent.
+        - ```hugeint pow (uint64_t exponent, const hugeint &modulus)``` - member function. raises 'this'
+          to the exponent, then aplies the modulo.
+        - ```hugeint::pow (hugeint base, uint64_t exponent, const hugeint &modulus)``` - static
+          funtion. reutrns (base ^ exponent) % modulo.
 
-	- #### Roots
+    - #### Roots
 
-	  Returns the floor of the root of degree 2, 3 or n.
+      Returns the floor of the root of degree 2, 3 or n.
 
-		- ```hugeint sqrt ()``` - member function. Turns 'this' into the floor of the square root.
-		- ```hugeint huge::sqrt (const hugeint &num)``` - external function. Returns the floor of the square root of num.
-		- ```hugeint cbrt ()``` - member function. Turns 'this' into the floor of the cube root.
-		- ```hugeint huge::cbrt (const hugeint &num)``` - external function. Returns the floor of the cube root of num.
-		- ```hugeint nthroot (uint64_t degree)``` - member function. Turns 'this' into the floor of the n-th degree root. n must be bigger than 1.
-		- ```hugeint huge::nthroot (const hugeint &num, uint64_t degree)``` - external function. Returns the floor of the n-th degree root of num. n must be bigger than 1.
+        - ```hugeint sqrt ()``` - member function. Turns 'this' into the floor of the square root.
+        - ```hugeint::sqrt (const hugeint &num)``` - static function. Returns the floor of the square root of
+          num.
+        - ```hugeint cbrt ()``` - member function. Turns 'this' into the floor of the cube root.
+        - ```hugeint::cbrt (const hugeint &num)``` - static function. Returns the floor of the cube root of num.
+        - ```hugeint nthroot (uint64_t degree)``` - member function. Turns 'this' into the floor of the n-th degree root.
+        - ```hugeint::nthroot (const hugeint &num, uint64_t degree)``` - static function. Returns the floor of the n-th degree root of num.
 
 # Work in progress
 
-This is still a work in progress and I'm not sure I'll ever consider it fully completed, so I'm open to requests and suggestions. If you find a bug, please open an issue on github. If you otherwise wish to contact me, you can find my mail in the bio of my profile.
+This is still a work in progress and I'm not sure I'll ever consider it fully completed, so I'm open to requests and
+suggestions. If you find a bug, please open an issue on github. If you otherwise wish to contact me, you can find my
+mail in the bio of my profile.
 
-I hope you'll enjoy working with it as much as I did making it. Thank you for using this library and good luck on your project!
+I hope you'll enjoy working with it as much as I did making it. Thank you for using this library and good luck on your
+project!
