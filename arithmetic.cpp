@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <stack>
 
 #include "hugeint.h"
 
@@ -9,14 +8,13 @@
 
 class timer {
 	std::chrono::steady_clock::time_point lastReset;
-	std::chrono::duration <double> time;
 public:
 	timer () {
 		lastReset = std::chrono::steady_clock::now();
 	}
 	double reset () {
 		std::chrono::steady_clock::time_point reset_time = std::chrono::steady_clock::now();
-		time = std::chrono::duration_cast <std::chrono::duration <double>>(reset_time - lastReset);
+		std::chrono::duration <double> time = std::chrono::duration_cast <std::chrono::duration <double>>(reset_time - lastReset);
 		lastReset = reset_time;
 		return time.count();
 	}
@@ -111,7 +109,7 @@ private:
 		}
 
 		if (str.empty()) {
-			if (params.size() == 0) {
+			if (params.empty()) {
 				message = "Void numbers are invalid. Try putting \'0\' instead";
 				error_id = 5;
 				return 0;
@@ -129,7 +127,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			hugeint ans = 1;
+			ans = 1;
 			for (int index = 2; index <= (int)params[0]; index++) {
 				ans *= index;
 			}
@@ -141,7 +139,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans.rand((params.empty() ? 32 : (size_t)params[0]), false);
+			ans.randomise((params.empty() ? 32 : (size_t)params[0]), false);
 		}
 		else if (str == "gcd") {
 			if (params.size() != 2) {
@@ -149,7 +147,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::gcd(params[0], params[1]);
+			ans = hugeint::gcd(params[0], params[1]);
 		}
 		else if (str == "abs") {
 			if (params.size() != 1) {
@@ -157,7 +155,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::abs(params[0]);
+			ans = hugeint::abs(params[0]);
 		}
 		else if (str == "pow") {
 			if (params.size() != 2) {
@@ -165,7 +163,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::pow(params[0], (int)params[1]);
+			ans = hugeint::pow(params[0], params[1]);
 		}
 		else if (str == "sqrt") {
 			if (params.size() != 1) {
@@ -173,7 +171,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::sqrt(params[0]);
+			ans = hugeint::sqrt(params[0]);
 		}
 		else if (str == "cbrt") {
 			if (params.size() != 1) {
@@ -181,7 +179,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::cbrt(params[0]);
+			ans = hugeint::cbrt(params[0]);
 		}
 		else if (str == "nthroot") {
 			if (params.size() != 2) {
@@ -189,7 +187,7 @@ private:
 				error_id = 7;
 				return 0;
 			}
-			ans = huge::nthroot(params[0], params[1]);
+			ans = hugeint::nthroot(params[0], params[1]);
 		}
 		else {
 			if (has_brackets) {
@@ -239,7 +237,7 @@ private:
 		if (*parse == '^') {
 			return priority == 3;
 		}
-		// If no other operator was found, try aplying multiplication, maybe without the symbol
+		// If no other operator was found, try applying multiplication, maybe without the symbol
 		return priority == 2;
 	}
 
@@ -349,25 +347,18 @@ public:
 
 int main () {
 	timer global;
-	std::string read, get_error;
+	std::string read;
 	calculator example;
-
 	getline(std::cin, read);
 	example.equation = read;
-
+	read.clear();
 	global.reset();
-	hugeint ans = example.getResult(get_error);
-
+	hugeint ans = example.getResult(read);
 	std::cout << "Calculation time (s):" << global.reset() << std::endl;
-	if (!get_error.empty()) {
-		std::cout << get_error << '\n';
-	}
-	else {
-		std::cout << "Answer:" << std::endl;
-		std::cout << "\tDouble:      " << (double)ans << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tHexadecimal: " << ans.toHex() << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tDecimal:     " << ans.toDec() << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tOctal:       " << ans.toOct() << " in " << global.reset() << " seconds." << std::endl;
-		std::cout << "\tBinary:      " << ans.toBin() << " in " << global.reset() << " seconds." << std::endl;
-	}
+	std::cout << "Answer: " << std::endl;
+	std::cout << "Hexadecimal: " << ans.toHex() << std::endl;
+	std::cout << "Decimal:     " << ans.toDec() << std::endl;
+	std::cout << "Octal:       " << ans.toOct() << std::endl;
+	std::cout << "Binary:      " << ans.toBin() << std::endl;
+	std::cout << "Output time (s):" << global.reset() << std::endl;
 }

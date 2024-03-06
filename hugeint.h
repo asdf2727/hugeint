@@ -2,63 +2,100 @@
 
 #include <iostream> //overload of << and >>
 #include <string>
-#include <deque>
-#include <cmath>
-#include <climits>
+#include <vector>
+#include <cstdint>
 #include <type_traits> // enable_if
-#include <random>
-#include <functional>
 
-#define NOT_HUGEINT_TEMP template <typename NotHugeint, typename Dummy = std::enable_if <!std::is_same <NotHugeint, hugeint>::value, bool>>
+// #define DIGIT_64 // Uncomment this to enable manual 64 bit digit size
+// #define DIGIT_32 // Uncomment this to enable manual 32 bit digit size
+
+#ifndef DIGIT_64
+#ifndef DIGIT_32
+#ifdef __SIZEOF_INT128__ // Automatic detection of __int128. If it doesn't work choose an option manually!
+#define DIGIT_64
+#else
+#define DIGIT_32
+#endif
+#endif
+#endif
+
+#define NOT_HUGEINT_TEMP \
+template <typename NotHugeint, typename = std::enable_if <!std::is_same <NotHugeint, hugeint>::value>>
+
+#define INTEGER_TEMP \
+template <typename Integer, typename = std::enable_if <!std::is_integral <Integer>::value>>
+
+#define COMPARE(op_name, implement) \
+friend bool operator op_name (const hugeint &lhs, const hugeint &rhs) { return implement; } \
+NOT_HUGEINT_TEMP friend bool operator op_name (const hugeint &lhs, const NotHugeint &rhs) { return lhs op_name (hugeint)rhs; } \
+NOT_HUGEINT_TEMP friend bool operator op_name (const NotHugeint &lhs, const hugeint &rhs) { return (hugeint)lhs op_name rhs; }
+
+#define OPERATION(op_name, implement) \
+friend hugeint operator op_name (const hugeint &lhs, const hugeint &rhs) { return implement; } \
+NOT_HUGEINT_TEMP friend hugeint operator op_name (const hugeint &lhs, const NotHugeint &rhs) { return lhs op_name (hugeint)rhs; } \
+NOT_HUGEINT_TEMP friend hugeint operator op_name (const NotHugeint &lhs, const hugeint &rhs) { return (hugeint)lhs op_name rhs; }
+
+#define ASSIGN(op_name, implement) \
+friend hugeint &operator op_name (hugeint &lhs, const hugeint &rhs) { implement; return lhs; } \
+NOT_HUGEINT_TEMP friend hugeint &operator op_name (hugeint &lhs, const NotHugeint &rhs) { return lhs op_name (hugeint)rhs; } \
+NOT_HUGEINT_TEMP friend NotHugeint &operator op_name (NotHugeint &lhs, const hugeint &rhs) { return lhs op_name (NotHugeint)rhs; }
 
 class hugeint {
-	// General declarations
 private:
-	typedef long long int llint;
-	typedef long int lint;
-	typedef short int sint;
-	typedef unsigned long long int ullint;
-	typedef unsigned long int ulint;
-	typedef unsigned int uint;
-	typedef unsigned short int usint;
+#ifdef DIGIT_64
+	typedef uint64_t digit_t;
+	static const int digit_len = 64;
+	static const int digit_log_len = 6;
+	static const digit_t digit_max = 0xffffffffffffffff;
+	typedef unsigned __int128 double_t;
+#endif
+#ifdef DIGIT_32
+	typedef uint32_t digit_t;
+	static const int digit_len = 32;
+	static const int digit_log_len = 5;
+	static const digit_t digit_max = 0xffffffff;
+	typedef uint64_t double_t;
+#endif
+
+	typedef std::size_t size_t;
+	typedef uint64_t shift_t;
+	typedef uint64_t exp_t;
+	typedef uint64_t root_t;
 
 	bool neg = false;
-	std::deque <uint> bits;
+	std::vector <digit_t> digits;
 
-	// Casting functions
+	// ----- Casting functions -----
 private:
-	void fromHex (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
-	void fromDec (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
-	void fromOct (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
-	void fromBin (const std::string::const_iterator &begin, const std::string::const_iterator &end, size_t &errPos);
+	size_t fromHex (const std::string::const_iterator &begin, const std::string::const_iterator &end);
+	size_t fromDec (const std::string::const_iterator &begin, const std::string::const_iterator &end);
+	size_t fromOct (const std::string::const_iterator &begin, const std::string::const_iterator &end);
+	size_t fromBin (const std::string::const_iterator &begin, const std::string::const_iterator &end);
 
 public:
-	// Reads a string beetwen the two iterators (end exclusive) and interprets it as a number in hexadecimal, decimal, octal or binary.
-	// It returns 0xffffffff if no parsing errors were found, else it returns the position of the first error.
+	// Reads a string between [begin, end) and interprets it as a number in hexadecimal, decimal, octal or binary.
+	// It returns 0xffffffffffffffff if no parsing errors were found, else it returns the position of the first error.
 	size_t fromString (std::string::const_iterator begin, std::string::const_iterator end);
 
-	// Returns a string in hexadecimal equal to self.
 	std::string toHex () const;
-	// Returns a string in decimal equal to self.
 	std::string toDec () const;
-	// Returns a string in octal equal to self.
 	std::string toOct () const;
-	// Returns a string in binary equal to self.
 	std::string toBin () const;
-
-	friend std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
-	friend std::istream &operator>> (std::istream &in, hugeint &to_set);
 
 	hugeint ();
 	hugeint (hugeint &&to_copy) noexcept;
 	hugeint (const hugeint &to_copy) = default;
 	hugeint (bool to_copy);
-	hugeint (sint to_copy);
-	hugeint (int to_copy);
-	hugeint (llint to_copy);
-	hugeint (usint to_copy);
-	hugeint (uint to_copy);
-	hugeint (ullint to_copy);
+	hugeint (int16_t to_copy);
+	hugeint (uint16_t to_copy);
+	hugeint (int32_t to_copy);
+	hugeint (uint32_t to_copy);
+	hugeint (int64_t to_copy);
+	hugeint (uint64_t to_copy);
+#ifdef DIGIT_64
+	hugeint (__int128 to_copy);
+	hugeint (unsigned __int128 to_copy);
+#endif
 	hugeint (float to_copy);
 	hugeint (double to_copy);
 	hugeint (const std::string &to_copy);
@@ -67,534 +104,289 @@ public:
 	hugeint &operator= (hugeint &&to_copy) noexcept;
 	hugeint &operator= (const hugeint &to_copy) = default;
 	hugeint &operator= (bool to_copy);
-	hugeint &operator= (sint to_copy);
-	hugeint &operator= (int to_copy);
-	hugeint &operator= (llint to_copy);
-	hugeint &operator= (usint to_copy);
-	hugeint &operator= (uint to_copy);
-	hugeint &operator= (ullint to_copy);
+	hugeint &operator= (int16_t to_copy);
+	hugeint &operator= (uint16_t to_copy);
+	hugeint &operator= (int32_t to_copy);
+	hugeint &operator= (uint32_t to_copy);
+	hugeint &operator= (int64_t to_copy);
+	hugeint &operator= (uint64_t to_copy);
+#ifdef DIGIT_64
+	hugeint &operator= (__int128 to_copy);
+	hugeint &operator= (unsigned __int128 to_copy);
+#endif
 	hugeint &operator= (float to_copy);
 	hugeint &operator= (double to_copy);
 	hugeint &operator= (const std::string &to_copy);
 	hugeint &operator= (const char *to_copy);
 
 	explicit operator bool () const;
-	explicit operator short int () const;
-	explicit operator int () const;
-	explicit operator long int () const;
-	explicit operator long long int () const;
-	explicit operator unsigned short int () const;
-	explicit operator unsigned int () const;
-	explicit operator unsigned long int () const;
-	explicit operator unsigned long long int () const;
+	explicit operator int16_t () const;
+	explicit operator uint16_t () const;
+	explicit operator int32_t () const;
+	explicit operator uint32_t () const;
+	operator int64_t () const;
+	operator uint64_t () const;
+#ifdef DIGIT_64
+	explicit operator __int128 () const;
+	explicit operator unsigned __int128 () const;
+#endif
 	explicit operator float () const;
 	explicit operator double () const;
 	explicit operator std::string () const;
-	explicit operator const char * () const;
 
-	// Mathematical functions
+	// ----- Mathematical functions -----
+
+	// Utility functions
 private:
 	void clearZeros ();
-	void resize (std::size_t new_size);
+	void resize (size_t new_size);
 	void invert ();
 
-	static hugeint simpleMult (const hugeint &num1, const hugeint &num2);
-	hugeint karatsuba (hugeint &num1, hugeint &num2, std::size_t tot_size);
-	inline hugeint doMultAlgorithm (hugeint &num1, hugeint &num2, std::size_t tot_size);
-
-	bool compareSml (const hugeint &to_comp) const;
-
-	void calculateAnd (const hugeint &to_and);
-	void calculateOr (const hugeint &to_or);
-	void calculateXor (const hugeint &to_xor);
-
-	void shiftFwd (ullint val);
-	void shiftBack (ullint val);
-
-	void increment ();
-	void decrement ();
-
-	void calculateAdd (const hugeint &to_and);
-	void calculateDec (const hugeint &to_dec);
-
-	void calculateMult (const hugeint &to_mult);
-
-	uint divBinSearch (hugeint &rest, const hugeint &to_div);
-	void calculateDiv (const hugeint &to_div);
-	void calculateMod (const hugeint &to_div);
-
-	void setRamdon (size_t size, bool rand_sign);
-
-	void calculateGcd (hugeint other);
-
-	void calculatePow (ullint exponent);
-	void calculatePow (ullint exponent, const hugeint &to_mod);
-
-	hugeint calculateNthRoot (ullint degree) const;
 public:
-	// Negates self
-	ullint size () const;
+	size_t size () const;
 	void negate ();
 
+	// Bit manipulation functions
 	bool getBit (size_t pos) const;
 	void flipBit (size_t pos);
 	void setBit (size_t pos, bool val);
 
-	friend bool operator== (const hugeint &lhs, const hugeint &rhs) {
-		return lhs.bits == rhs.bits && lhs.neg == rhs.neg;
-	}
-	NOT_HUGEINT_TEMP friend bool operator== (const hugeint &lhs, const NotHugeint &rhs) {
-		return lhs == (hugeint)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator== (const NotHugeint &lhs, const hugeint &rhs) {
-		return (hugeint)lhs == rhs;
-	}
+	// operator calculation functions
+private:
+	bool compareSml (const hugeint &to_comp) const;
 
-	friend bool operator!= (const hugeint &lhs, const hugeint &rhs) {
-		return lhs.bits != rhs.bits || lhs.neg != rhs.neg;
-	}
-	NOT_HUGEINT_TEMP friend bool operator!= (const hugeint &lhs, const NotHugeint &rhs) {
-		return lhs != (hugeint)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator!= (const NotHugeint &lhs, const hugeint &rhs) {
-		return (hugeint)lhs != rhs;
-	}
+	static hugeint calculateAnd (const hugeint &lhs, const hugeint &rhs);
+	void calculateAnd (const hugeint &rhs);
 
-	friend bool operator&& (const hugeint &lhs, const hugeint &rhs) {
-		return (bool)lhs && (bool)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator&& (const hugeint &lhs, const NotHugeint &rhs) {
-		return (bool)lhs && (bool)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator&& (const NotHugeint &lhs, const hugeint &rhs) {
-		return (bool)lhs && (bool)rhs;
-	}
+	static hugeint calculateOr (const hugeint &lhs, const hugeint &rhs);
+	void calculateOr (const hugeint &rhs);
 
-	friend bool operator|| (const hugeint &lhs, const hugeint &rhs) {
-		return (bool)lhs || (bool)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator|| (const hugeint &lhs, const NotHugeint &rhs) {
-		return (bool)lhs || (bool)rhs;
-	}
-	NOT_HUGEINT_TEMP friend bool operator|| (const NotHugeint &lhs, const hugeint &rhs) {
-		return (bool)lhs || (bool)rhs;
-	}
+	static hugeint calculateXor (const hugeint &lhs, const hugeint &rhs);
+	void calculateXor (const hugeint &rhs);
 
-	friend bool operator< (const hugeint &lhs, const hugeint &rhs) {
-		return lhs.compareSml(rhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator< (const hugeint &lhs, const NotHugeint &rhs) {
-		return lhs.compareSml((hugeint)rhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator< (const NotHugeint &lhs, const hugeint &rhs) {
-		return ((hugeint)lhs).compareSml(rhs);
-	}
+	void shiftFwd (shift_t val);
+	void shiftBack (shift_t val);
 
-	friend bool operator> (const hugeint &lhs, const hugeint &rhs) {
-		return rhs.compareSml(lhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator> (const hugeint &lhs, const NotHugeint &rhs) {
-		return ((hugeint)rhs).compareSml(lhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator> (const NotHugeint &lhs, const hugeint &rhs) {
-		return rhs.compareSml((hugeint)lhs);
-	}
+	void increment ();
+	void decrement ();
 
-	friend bool operator<= (const hugeint &lhs, const hugeint &rhs) {
-		return !rhs.compareSml(lhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator<= (const hugeint &lhs, const NotHugeint &rhs) {
-		return !((hugeint)rhs).compareSml(lhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator<= (const NotHugeint &lhs, const hugeint &rhs) {
-		return !rhs.compareSml((hugeint)lhs);
-	}
+	static hugeint calculateAdd (const hugeint &lhs, const hugeint &rhs, const bool diff = false);
+	void calculateAdd (const hugeint &rhs, const bool diff = false);
 
-	friend bool operator>= (const hugeint &lhs, const hugeint &rhs) {
-		return !lhs.compareSml(rhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator>= (const hugeint &lhs, const NotHugeint &rhs) {
-		return !((hugeint)lhs).compareSml(rhs);
-	}
-	NOT_HUGEINT_TEMP friend bool operator>= (const NotHugeint &lhs, const hugeint &rhs) {
-		return !((hugeint)lhs).compareSml(rhs);
-	}
+	static hugeint simpleMult (std::vector <digit_t>::iterator begin1, std::vector <digit_t>::iterator end1,
+	                           std::vector <digit_t>::iterator begin2, std::vector <digit_t>::iterator end2);
+	static hugeint addKaratsuba (std::vector <digit_t>::iterator begin1, std::vector <digit_t>::iterator end1,
+	                             std::vector <digit_t>::iterator begin2, std::vector <digit_t>::iterator end2);
+	static hugeint karatsuba (std::vector <digit_t>::iterator begin1, std::vector <digit_t>::iterator end1,
+	                          std::vector <digit_t>::iterator begin2, std::vector <digit_t>::iterator end2, size_t block_size);
+	static hugeint multAlgorithm (std::vector <digit_t>::iterator begin1, std::vector <digit_t>::iterator end1,
+	                              std::vector <digit_t>::iterator begin2, std::vector <digit_t>::iterator end2, size_t block_size);
+	static hugeint calculateMult (const hugeint &lhs, const hugeint &rhs);
 
+	static hugeint simpleDiv (hugeint lhs, hugeint rhs, bool rem = false);
+	static hugeint calculateDiv (const hugeint &lhs, const hugeint &rhs);
+	static hugeint calculateMod (const hugeint &lhs, const hugeint &rhs);
+
+	void setRamdon (size_t size, bool rand_sign); // Do not change
+
+	void calculateGcd (hugeint other);
+
+	void calculatePow (exp_t exponent);
+	void calculatePow (exp_t exponent, const hugeint &to_mod);
+
+	void calculateNthRoot (root_t degree);
+
+	// Comparison operators
+public:
+	COMPARE(&&, (bool)lhs && (bool)rhs)
+	COMPARE(||, (bool)lhs || (bool)rhs)
+
+	COMPARE(==, lhs.neg == rhs.neg && lhs.digits == rhs.digits)
+	COMPARE(!=, lhs.neg != rhs.neg || lhs.digits != rhs.digits)
+
+	COMPARE(<, lhs.compareSml(rhs))
+	COMPARE(>, rhs.compareSml(lhs))
+	COMPARE(<=, !rhs.compareSml(lhs))
+	COMPARE(>=, !lhs.compareSml(rhs))
+
+	// Bit operators
 	friend hugeint operator~ (const hugeint &rhs) {
 		hugeint to_mod = rhs;
 		to_mod.invert();
 		return to_mod;
 	}
 
-	friend hugeint &operator&= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateAnd(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator&= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateAnd((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator&= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs &= (NotHugeint)rhs;
-	}
+	ASSIGN(&=, lhs.calculateAnd(rhs))
+	OPERATION(&, calculateAnd(lhs, rhs))
+	ASSIGN(|=, lhs.calculateOr(rhs))
+	OPERATION(|, calculateOr(lhs, rhs))
+	ASSIGN(^=, lhs.calculateXor(rhs))
+	OPERATION(^, calculateXor(lhs, rhs))
 
-	friend hugeint operator& (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAnd(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator& (hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAnd((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator& (NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAnd(rhs);
-		return result;
-	}
-
-	friend hugeint &operator|= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateOr(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator|= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateOr((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator|= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs |= (NotHugeint)rhs;
-	}
-
-	friend hugeint operator| (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateOr(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator| (hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateOr((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator| (NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateOr(rhs);
-		return result;
-	}
-
-	friend hugeint &operator^= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateXor(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator^= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateXor((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator^= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs ^= (NotHugeint)rhs;
-	}
-
-	friend hugeint operator^ (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateXor(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator^ (hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateXor((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator^ (NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateXor(rhs);
-		return result;
-	}
-
-	template <typename T> friend hugeint &operator<<= (hugeint &lhs, const T &rhs) {
-		llint shift = rhs;
-		if (shift > 0) {
-			lhs.shiftFwd(shift);
+	INTEGER_TEMP friend hugeint &operator<<= (hugeint &lhs, const Integer &rhs) {
+		if (rhs > 0) {
+			lhs.shiftFwd(rhs);
 		}
-		else if (shift < 0) {
-			lhs.shiftBack(-shift);
+		else if (rhs < 0) {
+			lhs.shiftBack(-rhs);
 		}
 		return lhs;
 	}
-	template <typename T> friend hugeint operator<< (const hugeint &lhs, const T &rhs) {
-		hugeint calc = lhs;
-		calc <<= rhs;
-		return calc;
+	INTEGER_TEMP friend hugeint operator<< (const hugeint &lhs, const Integer &rhs) {
+		hugeint result(lhs);
+		result <<= rhs;
+		return result;
 	}
-	template <typename T> friend hugeint &operator>>= (hugeint &lhs, const T &rhs) {
-		llint shift = rhs;
-		if (shift > 0) {
+	INTEGER_TEMP friend hugeint &operator>>= (hugeint &lhs, const Integer &rhs) {
+		if (rhs > 0) {
 			lhs.shiftBack(rhs);
 		}
-		else if (shift < 0) {
+		else if (rhs < 0) {
 			lhs.shiftFwd(-rhs);
 		}
 		return lhs;
 	}
-	template <typename T> friend hugeint operator>> (const hugeint &lhs, const T &rhs) {
-		hugeint calc = lhs;
-		calc >>= rhs;
-		return calc;
+	INTEGER_TEMP friend hugeint operator>> (const hugeint &lhs, const Integer &rhs) {
+		hugeint result(lhs);
+		result >>= rhs;
+		return result;
 	}
 
+	// Addition and subtraction operators
 	friend hugeint &operator++ (hugeint &rhs) {
 		rhs.increment();
 		return rhs;
 	}
 	friend const hugeint operator++ (hugeint &lhs, int) {
-		hugeint sav = lhs;
+		hugeint result(lhs);
 		lhs.increment();
-		return sav;
+		return result;
 	}
 	friend hugeint &operator-- (hugeint &rhs) {
 		rhs.decrement();
 		return rhs;
 	}
 	friend const hugeint operator-- (hugeint &lhs, int) {
-		hugeint sav = lhs;
+		hugeint result(lhs);
 		lhs.decrement();
-		return sav;
-	}
-
-	friend hugeint &operator+= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateAdd(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator+= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateAdd((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator+= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs += (NotHugeint)rhs;
+		return result;
 	}
 
 	friend hugeint operator+ (const hugeint &lhs) {
 		return lhs;
 	}
-
-	friend hugeint operator+ (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAdd(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator+ (const hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAdd((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator+ (const NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateAdd(rhs);
-		return result;
-	}
-
-	friend hugeint &operator-= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateDec(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator-= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateDec((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator-= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs -= (NotHugeint)rhs;
-	}
-
 	friend hugeint operator- (const hugeint &lhs) {
-		hugeint result = lhs;
+		hugeint result(lhs);
 		result.negate();
 		return result;
 	}
 
-	friend hugeint operator- (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDec(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator- (const hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDec((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint operator- (const NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDec(rhs);
-		return result;
-	}
+	ASSIGN(+=, lhs.calculateAdd(rhs, false))
+	OPERATION(+, calculateAdd(lhs, rhs, false))
+	ASSIGN(-=, lhs.calculateAdd(rhs, true))
+	OPERATION(-, calculateAdd(lhs, rhs, true))
 
-	friend hugeint &operator*= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateMult(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator*= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateMult((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator*= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs *= (NotHugeint)rhs;
-	}
+	// Multiply and division operators
+	ASSIGN(*=, lhs = calculateMult(lhs, rhs))
+	OPERATION(*, calculateMult(lhs, rhs))
+	ASSIGN(/=, lhs = calculateDiv(lhs, rhs))
+	OPERATION(/, calculateDiv(lhs, rhs))
+	ASSIGN(%=, lhs = calculateMod(lhs, rhs))
+	OPERATION(%, calculateMod(lhs, rhs))
 
-	friend hugeint operator* (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMult(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator* (const hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMult((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator* (const NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMult(rhs);
-		return result;
-	}
-
-	friend hugeint &operator/= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateDiv(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator/= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateDiv((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator/= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs /= (NotHugeint)rhs;
-	}
-
-	friend hugeint operator/ (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDiv(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator/ (const hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDiv((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator/ (const NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateDiv(rhs);
-		return result;
-	}
-
-	friend hugeint &operator%= (hugeint &lhs, const hugeint &rhs) {
-		lhs.calculateMod(rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend hugeint &operator%= (hugeint &lhs, const NotHugeint &rhs) {
-		lhs.calculateMod((hugeint)rhs);
-		return lhs;
-	}
-	NOT_HUGEINT_TEMP friend NotHugeint &operator%= (NotHugeint &lhs, const hugeint &rhs) {
-		return lhs %= (NotHugeint)rhs;
-	}
-
-	friend hugeint operator% (const hugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMod(rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator% (const hugeint &lhs, const NotHugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMod((hugeint)rhs);
-		return result;
-	}
-	NOT_HUGEINT_TEMP friend hugeint operator% (const NotHugeint &lhs, const hugeint &rhs) {
-		hugeint result = lhs;
-		result.calculateMod(rhs);
-		return result;
-	}
-
-	template <typename T> hugeint pow (T exponent) {
-		calculatePow((ullint)exponent);
+	// Extra functions
+	hugeint pow (exp_t exponent) {
+		calculatePow(exponent);
 		return *this;
 	}
-	template <typename T> hugeint pow (T exponent, const hugeint &modulo) {
-		calculatePow((ullint)exponent, modulo);
+	static hugeint pow (hugeint base, exp_t exponent) {
+		base.calculatePow(exponent);
+		return base;
+	}
+	hugeint powMod (exp_t exponent, const hugeint &modulo) {
+		calculatePow(exponent, modulo);
 		return *this;
 	}
+	static hugeint powMod (hugeint base, exp_t exponent, const hugeint &modulo) {
+		base.calculatePow(exponent, modulo);
+		return base;
+	}
 
-	inline hugeint abs () {
+	hugeint abs () {
 		if (neg) {
 			negate();
 		}
 		return *this;
 	}
-	inline hugeint rand (size_t size, bool rand_sign) {
+	static hugeint abs (hugeint to_abs) {
+		if (to_abs.neg) {
+			to_abs.negate();
+		}
+		return to_abs;
+	}
+	hugeint randomise (size_t size, bool rand_sign) {
 		setRamdon(size, rand_sign);
 		return *this;
 	}
+	static hugeint rand (size_t size, bool rand_sign) {
+		hugeint ans;
+		ans.setRamdon(size, rand_sign);
+		return ans;
+	}
 
-	inline hugeint gcd (const hugeint &other) {
+	hugeint gcd (const hugeint &other) {
 		calculateGcd(other);
 		return *this;
 	}
+	static hugeint gcd (hugeint num1, const hugeint &num2) {
+		num1.calculateGcd(num2);
+		return num1;
+	}
+
 	hugeint lcm (const hugeint &other) {
 		hugeint gcd = *this;
 		gcd.calculateGcd(other);
-		calculateMult(other);
-		calculateDiv(gcd);
-		return *this;
+		return *this / gcd * other;
+	}
+	static hugeint lcm (const hugeint &num1, const hugeint &num2) {
+		hugeint gcd = num1;
+		gcd.calculateGcd(num2);
+		return num1 / gcd * num2;
 	}
 
 	hugeint sqrt () {
-		*this = calculateNthRoot(2);
+		calculateNthRoot(2);
 		return *this;
+	}
+	static hugeint sqrt (hugeint num) {
+		num.calculateNthRoot(2);
+		return num;
 	}
 	hugeint cbrt () {
-		*this = calculateNthRoot(3);
+		calculateNthRoot(3);
 		return *this;
 	}
-
-	template <typename T> hugeint nthroot (T degree) {
-		*this = calculateNthRoot((ullint)degree);
+	static hugeint cbrt (hugeint num) {
+		num.calculateNthRoot(3);
+		return num;
+	}
+	hugeint nthroot (root_t degree) {
+		calculateNthRoot(degree);
 		return *this;
+	}
+	static hugeint nthroot (hugeint num, root_t degree) {
+		num.calculateNthRoot(degree);
+		return num;
 	}
 };
 
-namespace huge {
-	template <typename T> hugeint pow (hugeint base, T exponent) {
-		base.pow(exponent);
-		return base;
-	}
-	template <typename T> hugeint pow (hugeint base, T exponent, const hugeint &modulo) {
-		base.pow(exponent, modulo);
-		return base;
-	}
-
-	inline hugeint abs (hugeint to_abs) {
-		return to_abs.abs();
-	}
-	inline hugeint rand (size_t size, bool rand_sign) {
-		hugeint ans;
-		return ans.rand(size, rand_sign);
-	}
-
-	inline hugeint gcd (const hugeint &num1, const hugeint &num2) {
-		hugeint ret = num1;
-		return ret.gcd(num2);
-	}
-	inline hugeint lcm (const hugeint &num1, const hugeint &num2) {
-		return num1 / gcd(num1, num2) * num2;
-	}
-
-	inline hugeint sqrt (const hugeint &num) {
-		hugeint ret = num;
-		return ret.sqrt();
-	}
-	inline hugeint cbrt (const hugeint &num) {
-		hugeint ret = num;
-		return ret.cbrt();
-	}
-	template <typename T> inline hugeint nthroot (const hugeint &num, T degree) {
-		hugeint ret = num;
-		return ret.nthroot(degree);
-	}
-}
-
 #undef NOT_HUGEINT_TEMP
+#undef INTEGER_TEMP
+
+#undef COMPARE
+#undef OPERATION
+#undef ASSIGN
+
+std::ostream &operator<< (std::ostream &out, const hugeint &to_show);
+std::ostream &operator<< (std::ostream &out, hugeint &&to_show);
+std::istream &operator>> (std::istream &in, hugeint &to_set);

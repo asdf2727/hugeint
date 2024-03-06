@@ -32,14 +32,19 @@
 *.app
 
 #folders
-/.vscode
-/.idea
-/cmake-build-release
-/cmake-build-debug
+cmake-build-debug/
+cmake-build-release/
+.vscode/
+.idea/
 
-#cmake files
+#CMake files
 CMakeLists.txt
 
-#source files
-test.cpp
+#sources
 3n+1_Conjecture.cpp
+test.cpp
+check.cpp
+
+#other files
+*.txt
+*.pdf
