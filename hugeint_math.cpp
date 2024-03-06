@@ -212,7 +212,7 @@ void hugeint::shiftFwd (size_t val) {
 void hugeint::shiftBack (size_t val) {
 	size_t digit_move = val >> digit_log_len;
 	size_t bit_shift = val & (digit_len - 1);
-	resize(digits.size() - digit_move);
+	resize(std::max((size_t)1, digits.size() - digit_move));
 	if (bit_shift) {
 		for (size_t index = 0; index < digits.size() - 1; index++) {
 			digits[index] = (digits[index + digit_move] >> bit_shift) | (digits[index + digit_move + 1] << (digit_len - bit_shift));
@@ -474,9 +474,7 @@ hugeint hugeint::simpleDiv (hugeint lhs, hugeint rhs, bool rem) {
 
 	size_t len_dif = lhs.digits.size() - rhs.digits.size();
 	hugeint temp1, temp2, ans;
-	if (!rem) {
-		ans.digits.resize(len_dif);
-	}
+	ans.digits.resize(len_dif);
 
 	digit_t quot;
 	temp1 = rhs << (len_dif * digit_len);
@@ -498,9 +496,7 @@ hugeint hugeint::simpleDiv (hugeint lhs, hugeint rhs, bool rem) {
 			lhs += temp1;
 			quot--;
 		}
-		if (!rem) {
-			ans.digits[i] = quot;
-		}
+		ans.digits[i] = quot;
 	}
 	if (rem) {
 		lhs >>= init_shift;

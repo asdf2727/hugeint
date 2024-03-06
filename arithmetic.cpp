@@ -361,5 +361,4 @@ int main () {
 	std::cout << "Octal:       " << ans.toOct() << std::endl;
 	std::cout << "Binary:      " << ans.toBin() << std::endl;
 	std::cout << "Output time (s):" << global.reset() << std::endl;
-
 }
